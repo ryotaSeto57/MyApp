@@ -6,7 +6,6 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.example.myapp.AppData
 
 class AppListViewModel(private val myapplication: Application) : AndroidViewModel(myapplication) {
@@ -15,7 +14,7 @@ class AppListViewModel(private val myapplication: Application) : AndroidViewMode
         Log.i("AppListViewModel", "AppListViewModel created")
         setAppList()
     }
-    private val _appDataList = MutableLiveData<MutableList<AppData>>()
+    private lateinit var _appDataList : MutableLiveData<MutableList<AppData>>
     val appDataList: LiveData<MutableList<AppData>>
         get() = _appDataList
 
@@ -24,12 +23,23 @@ class AppListViewModel(private val myapplication: Application) : AndroidViewMode
         val appList: MutableList<ApplicationInfo> = packageManager.getInstalledApplications(0)
         for (app in appList) {
             if (app.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
-                _appDataList.value?.add(
-                    AppData(
-                        app.loadLabel(packageManager).toString(),
-                        app.loadIcon(packageManager)
+                if(this::_appDataList.isInitialized) {
+                    _appDataList.value?.add(
+                        AppData(
+                            app.loadLabel(packageManager).toString(),
+                            app.loadIcon(packageManager)
+                        )
                     )
-                )
+                }else{
+                    _appDataList = MutableLiveData(
+                        mutableListOf(
+                        AppData(
+                            app.loadLabel(packageManager).toString(),
+                            app.loadIcon((packageManager))
+                            )
+                        )
+                    )
+                }
             }
         }
     }
