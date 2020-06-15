@@ -5,7 +5,6 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/titleFragment">
 
-
     <fragment
         android:id="@+id/titleFragment"
         android:name="com.example.myapp.TitleFragment"
@@ -19,6 +18,10 @@
         android:id="@+id/appListFragment"
         android:name="com.example.myapp.applist.AppListFragment"
         android:label="fragment_app_list"
-        tools:layout="@layout/fragment_app_list" />
+        tools:layout="@layout/fragment_app_list" >
+        <action
+            android:id="@+id/action_appListFragment_to_titleFragment"
+            app:destination="@id/titleFragment" />
+    </fragment>
 
 </navigation>

@@ -27,7 +27,4 @@ class TitleFragment : Fragment() {
         return binding.root
     }
 
-
-
-
 }

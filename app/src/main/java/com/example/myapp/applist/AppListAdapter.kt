@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapp.AppData
+import com.example.myapp.database.AppData
 import com.example.myapp.databinding.ListItemAppBinding
 
 class AppListAdapter : ListAdapter<AppData, AppListAdapter.ViewHolder>(
@@ -43,7 +43,7 @@ class AppListAdapter : ListAdapter<AppData, AppListAdapter.ViewHolder>(
 
 class AppDataDiffCallback : DiffUtil.ItemCallback<AppData>(){
     override fun areItemsTheSame(oldItem: AppData, newItem: AppData): Boolean {
-        return oldItem.name == newItem.name
+        return oldItem.pubSouDirAsUid == newItem.pubSouDirAsUid
     }
 
     override fun areContentsTheSame(oldItem: AppData, newItem: AppData): Boolean {
