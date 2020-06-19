@@ -3,6 +3,9 @@ package com.example.myapp.applist
 import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
+import android.content.pm.ApplicationInfo.*
+import android.content.pm.PackageManager.MATCH_SYSTEM_ONLY
+import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
@@ -10,8 +13,9 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.example.myapp.database.AppData
+import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
+import com.example.myapp.database.ReviewList
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.*
@@ -23,108 +27,100 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
+    private val pm = myapplication.packageManager
+    private val appList: MutableList<ApplicationInfo> = getAppList()
+
+    private fun getAppList():MutableList<ApplicationInfo>{
+        val allAppList =  pm.getInstalledApplications(MATCH_UNINSTALLED_PACKAGES)
+        return allAppList.filter{it.flags and MATCH_SYSTEM_ONLY == 0}.toMutableList()
+    }
+
+
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
 
-
-    private lateinit var _appDataList: MutableLiveData<MutableList<AppData>>
-    val appDataList: LiveData<MutableList<AppData>>
-        get() = _appDataList
-
+    private val _userAppReviewList = MutableLiveData<MutableList<AppCard>>()
+    val userAppReviewList: LiveData<MutableList<AppCard>>
+        get() = _userAppReviewList
 
     init {
         Log.i("AppListViewModel", "AppListViewModel created")
-        setAppList()
+        setUserAppList()
     }
 
-    private fun setAppList() {
+    private fun setUserAppList() {
         uiScope.launch {
-            val count = countAppList()
-            if (count == 0) {
-                _appDataList.value = getUserAppList()
-            }else{
-                _appDataList.value = getAppListFromDatabase()
-            }
-        }
-    }
-    private suspend fun getUserAppList(): MutableList<AppData> {
-        return withContext(Dispatchers.IO) {
-            val packageManager = myapplication.packageManager
-            val appList: MutableList<ApplicationInfo> = packageManager.getInstalledApplications(0)
-            var userAppList :MutableList<AppData>
-            for (app in appList) {
-                var initialized :boolean = false
-                if (app.flags and ApplicationInfo.FLAG_SYSTEM == 0) {
-                    if (!initialized) {
-                        userAppList = mutableListOf(
-                                AppData(
-                                    app.loadLabel(packageManager).toString(),
-                                    app.loadIcon((packageManager)),
-                                    "",
-                                    app.publicSourceDir
-                                )
-                            )
-                        initialized = true
-                        continue
-                    }
-                    userAppList.add(
-                        AppData(
-                            app.loadLabel(packageManager).toString(),
-                            app.loadIcon(packageManager),
-                            "",
-                            app.publicSourceDir
-                        )
-                    )
-                }
-            }
-            userAppList
+            val listId = createNewListId()
+            createAppCards(listId)
+            _userAppReviewList.value = getAppCardsFromDatabase(listId)
         }
     }
 
-    private suspend fun getAppListFromDatabase():MutableList<AppData>{
+    private suspend fun createAppCards(listId: Long) {
+        withContext(Dispatchers.IO) {
+            val listAppCards :MutableList<AppCard> = MutableList(appList.size) { index ->
+                AppCard(id =0,listId =  listId,index =  index, packageName = appList[index].packageName)
+            }
+            for (appCard in listAppCards){
+                insert(appCard)
+            }
+        }
+    }
+
+    private suspend fun getAppCardsFromDatabase(listId: Long):MutableList<AppCard>{
         return withContext(Dispatchers.IO){
-            val userAppList = getAppReviewList()
+            val listAppCards = database.getAppCards(listId)
+            listAppCards
         }
     }
 
-    private suspend fun countAppList(){
-        return withContext(Dispatchers.IO){ database.countAppList() }
+    private suspend fun insert(appCard: AppCard){
+        withContext(Dispatchers.IO){
+            database.insert(appCard)
+        }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        Log.i("AppListViewModel", "AppListViewModel destroyed!")
-        viewModelJob.cancel()
+    private suspend fun insert(listId: Long){
+        withContext(Dispatchers.IO){
+            database.insert(ReviewList(listId))
+        }
     }
 
-    fun removeAppDataFromList(index: Int) {
-        _appDataList.value?.removeAt(index)
+    private suspend fun update(appCard: AppCard){
+        withContext(Dispatchers.IO){
+            database.update(appCard)
+        }
     }
 
-    fun replaceAppData(index_a: Int, index_b: Int) {
-
-        val appDataA = _appDataList.value?.getOrNull(index_a)
-        val appDataB = _appDataList.value?.getOrNull(index_b)
-
-        _appDataList.value!![index_a] = appDataB!!
-        _appDataList.value!![index_b] = appDataA!!
+    private suspend fun createNewListId() :Long{
+        return withContext(Dispatchers.IO) {
+            val numberOfReviewList = database.countReviewList()
+            insert(numberOfReviewList.toLong())
+            numberOfReviewList.toLong()
+        }
     }
 
     fun uploadUserAppList() {
-        if (_appDataList.value!!.lastIndex < 100) {
-            saveToFireStorage()
-            saveToFireStore()
+        uiScope.launch {
+            if (_userAppReviewList.value!!.lastIndex < 100) {
+                for ((index,appCard) in _userAppReviewList.value!!.withIndex()){
+                    appCard.index = index
+                    update(appCard)
+                }
+                saveToFireStorage()
+                saveToFireStore()
+            }
         }
     }
 
-    private fun saveToFireStorage() {
+    private suspend fun saveToFireStorage() {
         var appIcon: Drawable
         var appUid: String
-
-        for (i in _appDataList.value!!.indices) {
-            appUid = _appDataList.value?.getOrNull(i)?.sourceDir!!
-            appIcon = _appDataList.value?.getOrNull(i)?.icon!!
+        for (appCard in _userAppReviewList.value!!) {
+            appUid = appCard.packageName
+            val appInfo = pm.getApplicationInfo(appCard.packageName,0)
+            appIcon = appInfo.loadIcon(pm)
             val bitmap = (appIcon as BitmapDrawable).bitmap
             val baos = ByteArrayOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
@@ -136,27 +132,42 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         }
     }
 
-    private fun saveToFireStore() {
-        val userApps: MutableMap<String, Any> = mutableMapOf()
-        for (i in _appDataList.value!!.indices) {
+    private suspend fun saveToFireStore() {
+        val userAppCards: MutableMap<Int, Any> = mutableMapOf()
+        for ((index,appCard) in _userAppReviewList.value!!.withIndex()) {
             val app: MutableMap<String, String> = mutableMapOf(
-                "appName" to "",
-                "appUid" to "",
-                "appReview" to ""
+                "appUid" to appCard.packageName,
+                "appReview" to appCard.review
             )
-            app["appName"] = _appDataList.value!![i].name
-            app["appUid"] = _appDataList.value!![i].pubSouDirAsUid
-            app["appReview"] = _appDataList.value!![i].review
-            userApps[i.toString()] = app
+            userAppCards[index] = app
         }
 
         db.collection("users")
-            .add(userApps)
+            .add(userAppCards)
             .addOnSuccessListener { documentReference ->
                 Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
             }
             .addOnFailureListener { e ->
                 Log.w(TAG, "Error adding document", e)
             }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Log.i("AppListViewModel", "AppListViewModel destroyed!")
+        viewModelJob.cancel()
+    }
+
+    fun removeAppDataFromList(index: Int) {
+        _userAppReviewList.value?.removeAt(index)
+    }
+
+    fun replaceAppData(index_a: Int, index_b: Int) {
+
+        val appDataA = _userAppReviewList.value!![index_a]
+        val appDataB = _userAppReviewList.value!![index_b]
+
+        _userAppReviewList.value!![index_a] = appDataB
+        _userAppReviewList.value!![index_b] = appDataA
     }
 }
