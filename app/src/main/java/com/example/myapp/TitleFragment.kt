@@ -24,6 +24,11 @@ class TitleFragment : Fragment() {
             view.findNavController().navigate(R.id.action_titleFragment_to_appListFragment)
         }
 
+        binding.createNewListButton.setOnClickListener{view: View ->
+            val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(true)
+            view.findNavController().navigate(action)
+        }
+
         return binding.root
     }
 

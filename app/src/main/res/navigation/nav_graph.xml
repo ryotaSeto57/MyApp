@@ -22,6 +22,10 @@
         <action
             android:id="@+id/action_appListFragment_to_titleFragment"
             app:destination="@id/titleFragment" />
+        <argument
+            android:name="createNewList"
+            app:argType="boolean"
+            android:defaultValue= "false"/>
     </fragment>
 
 </navigation>

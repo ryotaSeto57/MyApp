@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.ContentValues.TAG
 import android.content.pm.ApplicationInfo
 import android.content.pm.ApplicationInfo.*
-import android.content.pm.PackageManager.MATCH_SYSTEM_ONLY
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
@@ -19,9 +18,11 @@ import com.example.myapp.database.ReviewList
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
+import kotlin.Exception
 
-class AppListViewModel(private val database: AppDatabaseDao, private val myapplication: Application) : AndroidViewModel(myapplication) {
+class AppListViewModel(private val database: AppDatabaseDao, private val myapplication: Application,private val createNewList: Boolean) : AndroidViewModel(myapplication) {
 
     private var viewModelJob = Job()
 
@@ -32,7 +33,7 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     private fun getAppList():MutableList<ApplicationInfo>{
         val allAppList =  pm.getInstalledApplications(MATCH_UNINSTALLED_PACKAGES)
-        return allAppList.filter{it.flags and MATCH_SYSTEM_ONLY == 0}.toMutableList()
+        return allAppList.filter{it.flags and FLAG_SYSTEM == 0}.toMutableList()
     }
 
 
@@ -51,9 +52,26 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     private fun setUserAppList() {
         uiScope.launch {
-            val listId = createNewListId()
-            createAppCards(listId)
-            _userAppReviewList.value = getAppCardsFromDatabase(listId)
+            val count = countReviewList()
+            if (count == 0 || createNewList) {
+                val listId = getNewListId(count)
+                createAppCards(listId)
+            }
+            _userAppReviewList.value = getAppCardsFromDatabase()
+        }
+    }
+
+    private suspend fun countReviewList():Int{
+        return withContext(Dispatchers.IO) {
+            val numberOfReviewList =database.countReviewList()
+            numberOfReviewList
+        }
+    }
+
+    private suspend fun getNewListId(numberOfReviewList: Int) :Long{
+        return withContext(Dispatchers.IO) {
+            createNewListById(numberOfReviewList.toLong())
+            numberOfReviewList.toLong()
         }
     }
 
@@ -68,9 +86,10 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         }
     }
 
-    private suspend fun getAppCardsFromDatabase(listId: Long):MutableList<AppCard>{
+    private suspend fun getAppCardsFromDatabase():MutableList<AppCard>{
         return withContext(Dispatchers.IO){
-            val listAppCards = database.getAppCards(listId)
+            val listId = getLatestReviewList()!!.id
+            val listAppCards = database.getAppCards(listId).sortedBy{ it.index }.toMutableList()
             listAppCards
         }
     }
@@ -81,9 +100,15 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         }
     }
 
-    private suspend fun insert(listId: Long){
+    private suspend fun createNewListById(listId: Long){
         withContext(Dispatchers.IO){
             database.insert(ReviewList(listId))
+        }
+    }
+    private suspend fun saveAppCards(){
+        for ((index,appCard) in _userAppReviewList.value!!.withIndex()) {
+            appCard.index = index
+            update(appCard)
         }
     }
 
@@ -93,21 +118,17 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         }
     }
 
-    private suspend fun createNewListId() :Long{
-        return withContext(Dispatchers.IO) {
-            val numberOfReviewList = database.countReviewList()
-            insert(numberOfReviewList.toLong())
-            numberOfReviewList.toLong()
+    private suspend fun getLatestReviewList():ReviewList?{
+       return   withContext(Dispatchers.IO){
+            val latestReviewList= database.getLatestReviewList()
+           latestReviewList
         }
     }
 
     fun uploadUserAppList() {
         uiScope.launch {
             if (_userAppReviewList.value!!.lastIndex < 100) {
-                for ((index,appCard) in _userAppReviewList.value!!.withIndex()){
-                    appCard.index = index
-                    update(appCard)
-                }
+                saveAppCards()
                 saveToFireStorage()
                 saveToFireStore()
             }
@@ -115,41 +136,49 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     }
 
     private suspend fun saveToFireStorage() {
-        var appIcon: Drawable
-        var appUid: String
-        for (appCard in _userAppReviewList.value!!) {
-            appUid = appCard.packageName
-            val appInfo = pm.getApplicationInfo(appCard.packageName,0)
-            appIcon = appInfo.loadIcon(pm)
-            val bitmap = (appIcon as BitmapDrawable).bitmap
-            val baos = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-            val data = baos.toByteArray()
-            val checkIconNewOnCloud = storageRef.child("images/${appUid}").downloadUrl
-            checkIconNewOnCloud.addOnFailureListener {
-                storageRef.child("images/${appUid}").putBytes(data)
+        withContext(Dispatchers.IO) {
+            var appIcon: Drawable
+            var appUid: String
+            for (appCard in _userAppReviewList.value!!) {
+                appUid = appCard.packageName
+                try {
+                    storageRef.child("images/${appUid}").downloadUrl.await()
+                } catch (e: Exception) {
+                    val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
+                    appIcon = appInfo.loadIcon(pm)
+                    val bitmap = (appIcon as BitmapDrawable).bitmap
+                    val baos = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                    val data = baos.toByteArray()
+                    try {
+                        storageRef.child("images/$appUid").putBytes(data).await()
+                    } catch (e: Exception){
+                        Log.w(TAG,"error in uploading $appUid Image")
+                    }
+                }
             }
         }
     }
 
     private suspend fun saveToFireStore() {
-        val userAppCards: MutableMap<Int, Any> = mutableMapOf()
-        for ((index,appCard) in _userAppReviewList.value!!.withIndex()) {
-            val app: MutableMap<String, String> = mutableMapOf(
-                "appUid" to appCard.packageName,
-                "appReview" to appCard.review
-            )
-            userAppCards[index] = app
-        }
-
-        db.collection("users")
-            .add(userAppCards)
-            .addOnSuccessListener { documentReference ->
-                Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+        withContext(Dispatchers.IO) {
+            val userAppCards: MutableMap<String, Any> = mutableMapOf()
+            for ((index, appCard) in _userAppReviewList.value!!.withIndex()) {
+                val appInfo = pm.getApplicationInfo(appCard.packageName,0)
+                val app: MutableMap<String, String> = mutableMapOf(
+                    "appUid" to appCard.packageName,
+                    "appReview" to appCard.review,
+                    "appName" to appInfo.loadLabel(pm).toString()
+                )
+                userAppCards[index.toString()] = app
             }
-            .addOnFailureListener { e ->
+
+            try {
+                db.collection("users").add(userAppCards).await()
+            } catch (e: Exception) {
                 Log.w(TAG, "Error adding document", e)
             }
+        }
     }
 
     override fun onCleared() {
@@ -158,16 +187,23 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         viewModelJob.cancel()
     }
 
-    fun removeAppDataFromList(index: Int) {
-        _userAppReviewList.value?.removeAt(index)
+    fun removeAppDataFromList(index: Int,appCardId:Long) {
+            _userAppReviewList.value!!.removeAll{ it.id == appCardId }
     }
 
-    fun replaceAppData(index_a: Int, index_b: Int) {
+    fun replaceAppData(indexOfA: Int, indexOfB: Int) {
+        uiScope.launch {
+            val appCardA = _userAppReviewList.value!![indexOfA]
+            val appCardB = _userAppReviewList.value!![indexOfB]
+            _userAppReviewList.value!![indexOfA] = appCardB
+            _userAppReviewList.value!![indexOfB] = appCardA
+        }
+    }
 
-        val appDataA = _userAppReviewList.value!![index_a]
-        val appDataB = _userAppReviewList.value!![index_b]
 
-        _userAppReviewList.value!![index_a] = appDataB
-        _userAppReviewList.value!![index_b] = appDataA
+    private suspend fun deleteAppCard(appCardId:Long){
+        withContext(Dispatchers.IO){
+            database.deleteAppCard(appCardId)
+        }
     }
 }

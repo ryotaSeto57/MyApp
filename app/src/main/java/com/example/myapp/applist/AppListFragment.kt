@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.database.AppDatabase
 import com.example.myapp.databinding.FragmentAppListBinding
+import kotlinx.android.synthetic.main.list_item_app.view.*
 
 /**
  * A simple [Fragment] subclass.
@@ -39,7 +40,7 @@ class AppListFragment : Fragment() {
 
         val application = requireNotNull(this.activity).application
         val dataSource = AppDatabase.getInstance(application).appDatabaseDao
-        viewModelFactory = AppListViewModelFactory(dataSource,application)
+        viewModelFactory = AppListViewModelFactory(dataSource,application,AppListFragmentArgs.fromBundle(arguments!!).createNewList)
         viewModel = ViewModelProvider(this,viewModelFactory).get(AppListViewModel::class.java)
         Log.i("AppListFragment", "Called ViewModelProviders.of")
         val adapter = AppListAdapter()
@@ -50,9 +51,9 @@ class AppListFragment : Fragment() {
 
         binding.appListViewModel = viewModel
 
-        viewModel.appDataList.observe(viewLifecycleOwner, Observer{
+        viewModel.userAppReviewList.observe(viewLifecycleOwner, Observer{
             it?.let {
-                adapter.submitList(it)
+                adapter.submitReviewList(it)
             }
         })
 
@@ -66,14 +67,14 @@ class AppListFragment : Fragment() {
 
                 val fromPosition = viewHolder.adapterPosition
                 val toPosition = target.adapterPosition
-
                 viewModel.replaceAppData(fromPosition, toPosition)
                 adapter.notifyItemMoved(fromPosition, toPosition)
                 return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                viewModel.removeAppDataFromList(viewHolder.adapterPosition)
+                val appId =viewHolder.itemView.textAppCardId.text.toString().toLong()
+                viewModel.removeAppDataFromList(viewHolder.adapterPosition,appId)
                 adapter.notifyItemRemoved(viewHolder.adapterPosition)
             }
         })

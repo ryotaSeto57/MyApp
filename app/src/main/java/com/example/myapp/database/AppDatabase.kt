@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [AppData::class], version = 1, exportSchema = false)
+@Database(entities = [ReviewList::class,AppCard::class], version = 1, exportSchema = false)
 abstract  class AppDatabase : RoomDatabase(){
 
     abstract val appDatabaseDao: AppDatabaseDao
@@ -23,7 +23,7 @@ abstract  class AppDatabase : RoomDatabase(){
                     instance = Room.databaseBuilder(
                         context.applicationContext,
                         AppDatabase::class.java,
-                        "app_review_history_database"
+                        "review_card_database"
                     )
                         .fallbackToDestructiveMigration()
                         .build()

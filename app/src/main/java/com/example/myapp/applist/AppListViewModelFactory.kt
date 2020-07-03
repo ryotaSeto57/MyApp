@@ -6,13 +6,14 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.myapp.database.AppDatabaseDao
 
 class AppListViewModelFactory(
-    private val dataSource:AppDatabaseDao,
-    private val application: Application): ViewModelProvider.AndroidViewModelFactory(application) {
+    private val dataSource: AppDatabaseDao,
+    private val application: Application,
+    private val createNewList: Boolean): ViewModelProvider.AndroidViewModelFactory(application) {
 
     @Suppress("unchecked_cast")
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if(modelClass.isAssignableFrom(AppListViewModel::class.java)){
-            return AppListViewModel(dataSource,application) as T
+            return AppListViewModel(dataSource,application,createNewList) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
