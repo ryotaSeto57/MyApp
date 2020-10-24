@@ -67,6 +67,7 @@ class AppListAdapter : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDif
             binding.appImage.setImageDrawable(appInfo.loadIcon(pm))
             binding.appName.text = appInfo.loadLabel(pm).toString()
             binding.textAppCardId.text = item.id.toString()
+            binding.textAppCardIndex.text = item.index.toString()
             binding.executePendingBindings()
         }
 

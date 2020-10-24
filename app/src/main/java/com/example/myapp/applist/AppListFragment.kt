@@ -40,7 +40,7 @@ class AppListFragment : Fragment() {
 
         val application = requireNotNull(this.activity).application
         val dataSource = AppDatabase.getInstance(application).appDatabaseDao
-        viewModelFactory = AppListViewModelFactory(dataSource,application,AppListFragmentArgs.fromBundle(arguments!!).createNewList)
+        viewModelFactory = AppListViewModelFactory(dataSource,application,AppListFragmentArgs.fromBundle(requireArguments()).createNewList)
         viewModel = ViewModelProvider(this,viewModelFactory).get(AppListViewModel::class.java)
         Log.i("AppListFragment", "Called ViewModelProviders.of")
         val adapter = AppListAdapter()
@@ -64,7 +64,6 @@ class AppListFragment : Fragment() {
                 viewHolder: RecyclerView.ViewHolder,
                 target: RecyclerView.ViewHolder
             ): Boolean {
-
                 val fromPosition = viewHolder.adapterPosition
                 val toPosition = target.adapterPosition
                 viewModel.replaceAppData(fromPosition, toPosition)

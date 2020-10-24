@@ -8,6 +8,7 @@ import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -17,6 +18,7 @@ import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.ReviewList
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageException
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
@@ -127,7 +129,7 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     fun uploadUserAppList() {
         uiScope.launch {
-            if (_userAppReviewList.value!!.lastIndex < 100) {
+            if (_userAppReviewList.value!!.lastIndex < 300) {
                 saveAppCards()
                 saveToFireStorage()
                 saveToFireStore()
@@ -141,21 +143,23 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
             var appUid: String
             for (appCard in _userAppReviewList.value!!) {
                 appUid = appCard.packageName
-                try {
-                    storageRef.child("images/${appUid}").downloadUrl.await()
-                } catch (e: Exception) {
+                val uri = kotlin.runCatching {
+                    try {
+                         storageRef.child("images/${appUid}").downloadUrl.await()
+                    } catch(e:StorageException) {
                     val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
                     appIcon = appInfo.loadIcon(pm)
                     val bitmap = (appIcon as BitmapDrawable).bitmap
                     val baos = ByteArrayOutputStream()
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
                     val data = baos.toByteArray()
-                    try {
                         storageRef.child("images/$appUid").putBytes(data).await()
-                    } catch (e: Exception){
-                        Log.w(TAG,"error in uploading $appUid Image")
+                        storageRef.child("images/${appUid}").downloadUrl.await()
                     }
                 }
+                uri.getOrNull()
+                    ?.also{ appCard.downloadUrl = it.toString()}
+                    ?:Log.w(TAG,"error in uploading $appUid")
             }
         }
     }
@@ -168,11 +172,11 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
                 val app: MutableMap<String, String> = mutableMapOf(
                     "appUid" to appCard.packageName,
                     "appReview" to appCard.review,
-                    "appName" to appInfo.loadLabel(pm).toString()
+                    "appName" to appInfo.loadLabel(pm).toString(),
+                    "URL" to appCard.downloadUrl
                 )
                 userAppCards[index.toString()] = app
             }
-
             try {
                 db.collection("users").add(userAppCards).await()
             } catch (e: Exception) {
@@ -188,7 +192,10 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     }
 
     fun removeAppDataFromList(index: Int,appCardId:Long) {
-            _userAppReviewList.value!!.removeAll{ it.id == appCardId }
+       uiScope.launch {
+             deleteAppCard(appCardId)
+             _userAppReviewList.value!!.removeAll{ it.id == appCardId }
+         }
     }
 
     fun replaceAppData(indexOfA: Int, indexOfB: Int) {

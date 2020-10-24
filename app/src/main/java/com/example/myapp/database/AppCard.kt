@@ -17,5 +17,7 @@ data class AppCard(
     @ColumnInfo(name = "package_name")
     val packageName: String,
     @ColumnInfo(name = "review")
-    var review : String = ""
+    var review : String = "",
+    @ColumnInfo(name="download_url")
+    var downloadUrl : String = ""
 )
