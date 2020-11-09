@@ -10,6 +10,7 @@ import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.database.AppDatabase
@@ -43,7 +44,7 @@ class AppListFragment : Fragment() {
         viewModelFactory = AppListViewModelFactory(dataSource,application,AppListFragmentArgs.fromBundle(requireArguments()).createNewList)
         viewModel = ViewModelProvider(this,viewModelFactory).get(AppListViewModel::class.java)
         Log.i("AppListFragment", "Called ViewModelProviders.of")
-        val adapter = AppListAdapter()
+        val adapter = AppListAdapter(viewLifecycleOwner,this@AppListFragment.viewModel)
 
         binding.lifecycleOwner = viewLifecycleOwner
 
@@ -53,12 +54,20 @@ class AppListFragment : Fragment() {
 
         viewModel.userAppReviewList.observe(viewLifecycleOwner, Observer{
             it?.let {
+//                viewModel.updateUserAppReviewList(it)
                 adapter.submitReviewList(it)
             }
         })
+//        adapter.submitReviewList(viewModel.userAppReviewList)
 
-        val itemTouchHelper = ItemTouchHelper(object :ItemTouchHelper.SimpleCallback
-                (ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT) {
+        val itemTouchHelper = ItemTouchHelper(object :ItemTouchHelper.Callback() {
+
+            override fun getMovementFlags(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ): Int {
+                return makeMovementFlags(UP or DOWN, LEFT)
+            }
             override fun onMove(
                 recyclerView: RecyclerView,
                 viewHolder: RecyclerView.ViewHolder,
@@ -66,15 +75,30 @@ class AppListFragment : Fragment() {
             ): Boolean {
                 val fromPosition = viewHolder.adapterPosition
                 val toPosition = target.adapterPosition
+//                adapter.notifyItemMoved(fromPosition, toPosition)
                 viewModel.replaceAppData(fromPosition, toPosition)
-                adapter.notifyItemMoved(fromPosition, toPosition)
+//                adapter.submitReviewList(viewModel.userAppReviewList.value)
+//                viewModel.sortUserAppReviewList()
                 return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val appId =viewHolder.itemView.textAppCardId.text.toString().toLong()
+//                adapter.notifyItemRemoved(viewHolder.adapterPosition)
                 viewModel.removeAppDataFromList(viewHolder.adapterPosition,appId)
-                adapter.notifyItemRemoved(viewHolder.adapterPosition)
+            }
+
+            override fun onMoved(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                fromPos: Int,
+                target: RecyclerView.ViewHolder,
+                toPos: Int,
+                x: Int,
+                y: Int
+            ) {
+                super.onMoved(recyclerView, viewHolder, fromPos, target, toPos, x, y)
+//                viewModel.replaceAppData(fromPos,toPos)
             }
         })
 

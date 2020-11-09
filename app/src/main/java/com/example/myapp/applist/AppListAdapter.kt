@@ -5,6 +5,7 @@ import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -16,13 +17,13 @@ import kotlinx.coroutines.CoroutineScope
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
 
-class AppListAdapter : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
+class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val viewModel: AppListViewModel) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder) {
             is ViewHolder -> {
                 val item = getItem(position) as DataItem.AppCardItem
-                holder.bind(item.appCard)
+                holder.bind(item.appCard, viewLifecycleOwner, viewModel)
             }
         }
     }
@@ -42,7 +43,7 @@ class AppListAdapter : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDif
         }
     }
 
-    fun submitReviewList(list: List<AppCard>?){
+    fun submitReviewList(list: MutableList<AppCard>?){
         val items = when (list){
             null -> listOf(DataItem.AddAppButton)
             else -> list.map{DataItem.AppCardItem(it)} + listOf(DataItem.AddAppButton)
@@ -60,15 +61,18 @@ class AppListAdapter : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDif
         }
     }
 
-    class ViewHolder private constructor(private val binding: ListItemAppBinding,private val pm :PackageManager) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: AppCard){
-            binding.appCard = item
-            val appInfo = pm.getApplicationInfo(item.packageName,MATCH_UNINSTALLED_PACKAGES)
-            binding.appImage.setImageDrawable(appInfo.loadIcon(pm))
-            binding.appName.text = appInfo.loadLabel(pm).toString()
-            binding.textAppCardId.text = item.id.toString()
-            binding.textAppCardIndex.text = item.index.toString()
-            binding.executePendingBindings()
+    class ViewHolder private constructor(private val binding: ListItemAppBinding, private val pm :PackageManager) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel){
+            binding.run {
+                lifecycleOwner = viewLifecycleOwner
+                appCard = item
+                val appInfo = pm.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES)
+                appImage.setImageDrawable(appInfo.loadIcon(pm))
+                appName.text = appInfo.loadLabel(pm).toString()
+                textAppCardId.text = item.id.toString()
+                textAppCardIndex.text = item.index.toString()
+                executePendingBindings()
+            }
         }
 
         companion object{

@@ -8,11 +8,12 @@ import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.util.Log
+import android.view.View
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Transformations
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.ReviewList
@@ -38,7 +39,6 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         return allAppList.filter{it.flags and FLAG_SYSTEM == 0}.toMutableList()
     }
 
-
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
@@ -46,6 +46,12 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     private val _userAppReviewList = MutableLiveData<MutableList<AppCard>>()
     val userAppReviewList: LiveData<MutableList<AppCard>>
         get() = _userAppReviewList
+
+    val addButtonVisible = Transformations.map(_userAppReviewList){
+        View.GONE
+    }
+
+    private var userAppReviewListStore : MutableList<AppCard> = mutableListOf()
 
     init {
         Log.i("AppListViewModel", "AppListViewModel created")
@@ -187,23 +193,38 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     override fun onCleared() {
         super.onCleared()
+        uiScope.launch {
+            saveAppCards()
+        }
         Log.i("AppListViewModel", "AppListViewModel destroyed!")
         viewModelJob.cancel()
     }
 
     fun removeAppDataFromList(index: Int,appCardId:Long) {
        uiScope.launch {
-             deleteAppCard(appCardId)
-             _userAppReviewList.value!!.removeAll{ it.id == appCardId }
+           deleteAppCard(appCardId)
+           _userAppReviewList.value!!.removeAll{ it.id == appCardId }
+           _userAppReviewList.value = _userAppReviewList.value
          }
     }
 
-    fun replaceAppData(indexOfA: Int, indexOfB: Int) {
+    fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         uiScope.launch {
-            val appCardA = _userAppReviewList.value!![indexOfA]
-            val appCardB = _userAppReviewList.value!![indexOfB]
-            _userAppReviewList.value!![indexOfA] = appCardB
-            _userAppReviewList.value!![indexOfB] = appCardA
+            withContext(Dispatchers.IO) {
+                userAppReviewListStore = _userAppReviewList.value!!
+                userAppReviewListStore[indexOfFrom].index = indexOfTo
+                if (indexOfFrom < indexOfTo) {
+                    for (i in indexOfFrom until indexOfTo) {
+                        userAppReviewListStore[i + 1].index -= 1
+                    }
+                } else if (indexOfFrom > indexOfTo) {
+                    for (i in indexOfTo until indexOfFrom) {
+                        userAppReviewListStore[i].index += 1
+                    }
+                }
+                userAppReviewListStore.sortBy { it.index }
+                _userAppReviewList.postValue(userAppReviewListStore)
+            }
         }
     }
 

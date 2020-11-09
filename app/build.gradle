@@ -27,6 +27,13 @@ android {
         }
     }
 
+    //ref https://qiita.com/que9/items/52725c3caf33f2a9b44e
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions.jvmTarget = "1.8"
+
     buildFeatures {
         dataBinding = true
     }
@@ -42,7 +49,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'com.google.android.material:material:1.2.1'
 
 
     // Java language implementation
@@ -61,6 +68,14 @@ dependencies {
 
     //RecyclerView
     implementation "androidx.recyclerview:recyclerview:1.1.0"
+
+
+    //viewModel,liveData
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    kapt "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    implementation "androidx.fragment:fragment-ktx:1.2.5"
+
 
     //Room
     implementation "androidx.room:room-runtime:$room_version"

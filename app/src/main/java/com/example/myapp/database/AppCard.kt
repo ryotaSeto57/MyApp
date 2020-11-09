@@ -9,7 +9,7 @@ import androidx.room.PrimaryKey
 
 data class AppCard(
     @PrimaryKey(autoGenerate = true)
-    val id: Long,
+    var id: Long,
     @ColumnInfo(name = "list_id")
     val listId: Long,
     @ColumnInfo(name="index")
