@@ -2,28 +2,26 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".applist.AppListFragment">
-
+    >
     <data>
-
         <variable
             name="appListViewModel"
             type="com.example.myapp.applist.AppListViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/saveButton"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/app_list"
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/share_button"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:onClick="@{() -> appListViewModel.uploadUserAppList()}"
+            android:text="@string/share"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"/>
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            app:layout_constraintStart_toStartOf="parent" />
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

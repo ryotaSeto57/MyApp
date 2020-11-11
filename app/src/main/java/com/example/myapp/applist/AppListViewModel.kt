@@ -36,7 +36,15 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     private fun getAppList():MutableList<ApplicationInfo>{
         val allAppList =  pm.getInstalledApplications(MATCH_UNINSTALLED_PACKAGES)
-        return allAppList.filter{it.flags and FLAG_SYSTEM == 0}.toMutableList()
+        val selectedList = allAppList.filter{it.flags and FLAG_SYSTEM == 0}.toMutableList()
+        val regex = Regex("com.example.")
+        val finalList = mutableListOf<ApplicationInfo>()
+        for (appInfo in selectedList){
+            if(!regex.containsMatchIn(appInfo.packageName)){
+                finalList.add(appInfo)
+            }
+        }
+        return finalList
     }
 
     private val db = FirebaseFirestore.getInstance()
@@ -47,8 +55,12 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     val userAppReviewList: LiveData<MutableList<AppCard>>
         get() = _userAppReviewList
 
-    val addButtonVisible = Transformations.map(_userAppReviewList){
-        View.GONE
+    val addButtonVisible :LiveData<Int> = Transformations.map(userAppReviewList){
+        if (it.size == appList.size){
+            View.VISIBLE
+        }else{
+            View.GONE
+        }
     }
 
     private var userAppReviewListStore : MutableList<AppCard> = mutableListOf()
@@ -203,8 +215,12 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     fun removeAppDataFromList(index: Int,appCardId:Long) {
        uiScope.launch {
            deleteAppCard(appCardId)
-           _userAppReviewList.value!!.removeAll{ it.id == appCardId }
-           _userAppReviewList.value = _userAppReviewList.value
+           userAppReviewListStore = _userAppReviewList.value!!
+           userAppReviewListStore.removeAt(index)
+           for (i in index until _userAppReviewList.value!!.size){
+               userAppReviewListStore[i].index = i
+           }
+           _userAppReviewList.value = userAppReviewListStore
          }
     }
 

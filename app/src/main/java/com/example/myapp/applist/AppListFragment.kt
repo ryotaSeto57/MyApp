@@ -75,7 +75,6 @@ class AppListFragment : Fragment() {
             ): Boolean {
                 val fromPosition = viewHolder.adapterPosition
                 val toPosition = target.adapterPosition
-//                adapter.notifyItemMoved(fromPosition, toPosition)
                 viewModel.replaceAppData(fromPosition, toPosition)
 //                adapter.submitReviewList(viewModel.userAppReviewList.value)
 //                viewModel.sortUserAppReviewList()
@@ -84,7 +83,6 @@ class AppListFragment : Fragment() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val appId =viewHolder.itemView.textAppCardId.text.toString().toLong()
-//                adapter.notifyItemRemoved(viewHolder.adapterPosition)
                 viewModel.removeAppDataFromList(viewHolder.adapterPosition,appId)
             }
 

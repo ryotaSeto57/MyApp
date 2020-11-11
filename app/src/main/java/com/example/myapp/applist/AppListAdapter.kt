@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
+private  const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
 
 class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val viewModel: AppListViewModel) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
 
@@ -32,6 +33,7 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val
         return when (viewType){
             ITEM_VIEW_TYPE_ITEM -> ViewHolder.from(parent)
             ITEM_VIEW_TYPE_BUTTON -> ButtonViewHolder.from(parent)
+            ITEM_VIEW_TYPE_SHARE_BUTTON -> ShareButtonHolder.from(parent)
             else -> throw ClassCastException("Unknown viewType $viewType")
         }
     }
@@ -40,13 +42,14 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val
         return when (getItem(position)){
             is DataItem.AppCardItem -> ITEM_VIEW_TYPE_ITEM
             is DataItem.AddAppButton -> ITEM_VIEW_TYPE_BUTTON
+            is DataItem.ShareButton -> ITEM_VIEW_TYPE_SHARE_BUTTON
         }
     }
 
     fun submitReviewList(list: MutableList<AppCard>?){
         val items = when (list){
             null -> listOf(DataItem.AddAppButton)
-            else -> list.map{DataItem.AppCardItem(it)} + listOf(DataItem.AddAppButton)
+            else -> list.map{DataItem.AppCardItem(it)} + listOf(DataItem.AddAppButton) +listOf(DataItem.ShareButton)
         }
         submitList(items)
     }
@@ -57,6 +60,16 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val view = layoutInflater.inflate(R.layout.add_app_button, parent, false)
                 return ButtonViewHolder(view)
+            }
+        }
+    }
+
+    class ShareButtonHolder(view: View): RecyclerView.ViewHolder(view){
+        companion object{
+            fun from(parent: ViewGroup): ShareButtonHolder{
+                val layoutInflater = LayoutInflater.from(parent.context)
+                val view = layoutInflater.inflate(R.layout.share_button, parent, false)
+                return ShareButtonHolder(view)
             }
         }
     }
@@ -103,6 +116,10 @@ sealed class DataItem{
     }
 
     object AddAppButton:DataItem(){
+        override val id = Long.MAX_VALUE -1
+    }
+
+    object ShareButton:DataItem() {
         override val id = Long.MAX_VALUE
     }
 
