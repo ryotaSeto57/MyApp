@@ -26,6 +26,17 @@
             android:name="createNewList"
             app:argType="boolean"
             android:defaultValue= "false"/>
+        <action
+            android:id="@+id/action_appListFragment_to_addAppListFragment"
+            app:destination="@id/addAppListFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/addAppListFragment"
+        android:name="com.example.myapp.applist.AddAppListFragment"
+        android:label="AddAppListFragment" >
+        <action
+            android:id="@+id/action_addAppListFragment_to_appListFragment"
+            app:destination="@id/appListFragment" />
     </fragment>
 
 </navigation>

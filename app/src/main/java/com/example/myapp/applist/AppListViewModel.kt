@@ -17,6 +17,7 @@ import androidx.lifecycle.Transformations
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.ReviewList
+import com.example.myapp.database.AddAppName
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
@@ -25,7 +26,11 @@ import kotlinx.coroutines.tasks.await
 import java.io.ByteArrayOutputStream
 import kotlin.Exception
 
-class AppListViewModel(private val database: AppDatabaseDao, private val myapplication: Application,private val createNewList: Boolean) : AndroidViewModel(myapplication) {
+class AppListViewModel(
+    private val database: AppDatabaseDao,
+    private val myapplication: Application,
+    private val createNewList: Boolean
+) : AndroidViewModel(myapplication) {
 
     private var viewModelJob = Job()
 
@@ -34,13 +39,13 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     private val pm = myapplication.packageManager
     private val appList: MutableList<ApplicationInfo> = getAppList()
 
-    private fun getAppList():MutableList<ApplicationInfo>{
-        val allAppList =  pm.getInstalledApplications(MATCH_UNINSTALLED_PACKAGES)
-        val selectedList = allAppList.filter{it.flags and FLAG_SYSTEM == 0}.toMutableList()
+    private fun getAppList(): MutableList<ApplicationInfo> {
+        val allAppList = pm.getInstalledApplications(MATCH_UNINSTALLED_PACKAGES)
+        val selectedList = allAppList.filter { it.flags and FLAG_SYSTEM == 0 }.toMutableList()
         val regex = Regex("com.example.")
         val finalList = mutableListOf<ApplicationInfo>()
-        for (appInfo in selectedList){
-            if(!regex.containsMatchIn(appInfo.packageName)){
+        for (appInfo in selectedList) {
+            if (!regex.containsMatchIn(appInfo.packageName)) {
                 finalList.add(appInfo)
             }
         }
@@ -55,15 +60,42 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
     val userAppReviewList: LiveData<MutableList<AppCard>>
         get() = _userAppReviewList
 
-    val addButtonVisible :LiveData<Int> = Transformations.map(userAppReviewList){
-        if (it.size == appList.size){
-            View.VISIBLE
-        }else{
+
+    val addButtonVisible: LiveData<Int> = Transformations.map(userAppReviewList) {
+        if (it.size == appList.size) {
             View.GONE
+        } else {
+            View.VISIBLE
         }
     }
+    private val _listOfAppName: LiveData<MutableList<String>> =
+        Transformations.map(userAppReviewList) {
+            MutableList(it.size) { index ->
+                it[index].packageName
+            }
+        }
 
-    private var userAppReviewListStore : MutableList<AppCard> = mutableListOf()
+    private val _listOfAddAppName: LiveData<MutableList<String>> =
+        Transformations.map(_listOfAppName) { listOfAppName ->
+            val allUsersAppList = getAppList()
+            for (packageName in listOfAppName) {
+                allUsersAppList.removeAll { it.packageName == packageName }
+            }
+            allUsersAppList.map { it.packageName }.toMutableList()
+        }
+
+    val addAppNameList :LiveData<MutableList<AddAppName>> =
+        Transformations.map(_listOfAddAppName){
+            MutableList(it.size){index ->
+                AddAppName(it[index])
+            }
+        }
+
+//    private val addOrNot =MutableLiveData<Boolean>(false)
+
+    private var userAppCardListStore: MutableList<AppCard> = mutableListOf()
+    private var addUserAppNameListStore: MutableList<String> = mutableListOf()
+
 
     init {
         Log.i("AppListViewModel", "AppListViewModel created")
@@ -81,14 +113,14 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         }
     }
 
-    private suspend fun countReviewList():Int{
+    private suspend fun countReviewList(): Int {
         return withContext(Dispatchers.IO) {
-            val numberOfReviewList =database.countReviewList()
+            val numberOfReviewList = database.countReviewList()
             numberOfReviewList
         }
     }
 
-    private suspend fun getNewListId(numberOfReviewList: Int) :Long{
+    private suspend fun getNewListId(numberOfReviewList: Int): Long {
         return withContext(Dispatchers.IO) {
             createNewListById(numberOfReviewList.toLong())
             numberOfReviewList.toLong()
@@ -97,51 +129,76 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
 
     private suspend fun createAppCards(listId: Long) {
         withContext(Dispatchers.IO) {
-            val listAppCards :MutableList<AppCard> = MutableList(appList.size) { index ->
-                AppCard(id =0,listId =  listId,index =  index, packageName = appList[index].packageName)
+            val listAppCards: MutableList<AppCard> = MutableList(appList.size) { index ->
+                AppCard(
+                    id = 0,
+                    listId = listId,
+                    index = index,
+                    packageName = appList[index].packageName
+                )
             }
-            for (appCard in listAppCards){
+            for (appCard in listAppCards) {
                 insert(appCard)
             }
         }
     }
 
-    private suspend fun getAppCardsFromDatabase():MutableList<AppCard>{
-        return withContext(Dispatchers.IO){
+    private suspend fun createAddAppCards(packageNameList: MutableList<String>) {
+        withContext(Dispatchers.IO) {
+            val listAddAppCards: MutableList<AppCard> = MutableList(packageNameList.size) { index ->
+                AppCard(
+                    id = _userAppReviewList.value!!.last().id + index.toLong() + 1L,
+                    listId = _userAppReviewList.value!!.last().listId,
+                    index = _userAppReviewList.value!!.last().index + index + 1,
+                    packageName = packageNameList[index]
+                )
+            }
+            for (appCard in listAddAppCards) {
+                insert(appCard)
+            }
+            userAppCardListStore = _userAppReviewList.value!!
+            userAppCardListStore.plusAssign(listAddAppCards)
+            _userAppReviewList.postValue(userAppCardListStore)
+        }
+    }
+
+    private suspend fun getAppCardsFromDatabase(): MutableList<AppCard> {
+        return withContext(Dispatchers.IO) {
             val listId = getLatestReviewList()!!.id
-            val listAppCards = database.getAppCards(listId).sortedBy{ it.index }.toMutableList()
+            val listAppCards = database.getAppCards(listId).sortedBy { it.index }.toMutableList()
             listAppCards
         }
     }
 
-    private suspend fun insert(appCard: AppCard){
-        withContext(Dispatchers.IO){
+    private suspend fun insert(appCard: AppCard) {
+        withContext(Dispatchers.IO) {
             database.insert(appCard)
         }
     }
 
-    private suspend fun createNewListById(listId: Long){
-        withContext(Dispatchers.IO){
+    private suspend fun createNewListById(listId: Long) {
+        withContext(Dispatchers.IO) {
             database.insert(ReviewList(listId))
         }
     }
-    private suspend fun saveAppCards(){
-        for ((index,appCard) in _userAppReviewList.value!!.withIndex()) {
+
+    private suspend fun saveAppCards() {
+        for ((index, appCard) in _userAppReviewList.value!!.withIndex()) {
             appCard.index = index
             update(appCard)
         }
     }
 
-    private suspend fun update(appCard: AppCard){
-        withContext(Dispatchers.IO){
+    private suspend fun update(appCard: AppCard) {
+        withContext(Dispatchers.IO) {
             database.update(appCard)
         }
     }
 
-    private suspend fun getLatestReviewList():ReviewList?{
-       return   withContext(Dispatchers.IO){
-            val latestReviewList= database.getLatestReviewList()
-           latestReviewList
+    private suspend fun getLatestReviewList(): ReviewList? {
+        return withContext(Dispatchers.IO) {
+            val latestReviewList = database.getLatestReviewList()
+            latestReviewList
         }
     }
 
@@ -163,21 +220,21 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
                 appUid = appCard.packageName
                 val uri = kotlin.runCatching {
                     try {
-                         storageRef.child("images/${appUid}").downloadUrl.await()
-                    } catch(e:StorageException) {
-                    val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
-                    appIcon = appInfo.loadIcon(pm)
-                    val bitmap = (appIcon as BitmapDrawable).bitmap
-                    val baos = ByteArrayOutputStream()
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
-                    val data = baos.toByteArray()
+                        storageRef.child("images/${appUid}").downloadUrl.await()
+                    } catch (e: StorageException) {
+                        val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
+                        appIcon = appInfo.loadIcon(pm)
+                        val bitmap = (appIcon as BitmapDrawable).bitmap
+                        val baos = ByteArrayOutputStream()
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                        val data = baos.toByteArray()
                         storageRef.child("images/$appUid").putBytes(data).await()
                         storageRef.child("images/${appUid}").downloadUrl.await()
                     }
                 }
                 uri.getOrNull()
-                    ?.also{ appCard.downloadUrl = it.toString()}
-                    ?:Log.w(TAG,"error in uploading $appUid")
+                    ?.also { appCard.downloadUrl = it.toString() }
+                    ?: Log.w(TAG, "error in uploading $appUid")
             }
         }
     }
@@ -186,7 +243,7 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         withContext(Dispatchers.IO) {
             val userAppCards: MutableMap<String, Any> = mutableMapOf()
             for ((index, appCard) in _userAppReviewList.value!!.withIndex()) {
-                val appInfo = pm.getApplicationInfo(appCard.packageName,0)
+                val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
                 val app: MutableMap<String, String> = mutableMapOf(
                     "appUid" to appCard.packageName,
                     "appReview" to appCard.review,
@@ -212,42 +269,50 @@ class AppListViewModel(private val database: AppDatabaseDao, private val myappli
         viewModelJob.cancel()
     }
 
-    fun removeAppDataFromList(index: Int,appCardId:Long) {
-       uiScope.launch {
-           deleteAppCard(appCardId)
-           userAppReviewListStore = _userAppReviewList.value!!
-           userAppReviewListStore.removeAt(index)
-           for (i in index until _userAppReviewList.value!!.size){
-               userAppReviewListStore[i].index = i
-           }
-           _userAppReviewList.value = userAppReviewListStore
-         }
+    fun removeAppDataFromList(index: Int, appCardId: Long) {
+        uiScope.launch {
+            deleteAppCard(appCardId)
+            userAppCardListStore = _userAppReviewList.value!!
+            userAppCardListStore.removeAt(index)
+            for (i in index until _userAppReviewList.value!!.size) {
+                userAppCardListStore[i].index = i
+            }
+            _userAppReviewList.value = userAppCardListStore
+        }
     }
 
     fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         uiScope.launch {
             withContext(Dispatchers.IO) {
-                userAppReviewListStore = _userAppReviewList.value!!
-                userAppReviewListStore[indexOfFrom].index = indexOfTo
+                userAppCardListStore = _userAppReviewList.value!!
+                userAppCardListStore[indexOfFrom].index = indexOfTo
                 if (indexOfFrom < indexOfTo) {
                     for (i in indexOfFrom until indexOfTo) {
-                        userAppReviewListStore[i + 1].index -= 1
+                        userAppCardListStore[i + 1].index -= 1
                     }
                 } else if (indexOfFrom > indexOfTo) {
                     for (i in indexOfTo until indexOfFrom) {
-                        userAppReviewListStore[i].index += 1
+                        userAppCardListStore[i].index += 1
                     }
                 }
-                userAppReviewListStore.sortBy { it.index }
-                _userAppReviewList.postValue(userAppReviewListStore)
+                userAppCardListStore.sortBy { it.index }
+                _userAppReviewList.postValue(userAppCardListStore)
             }
         }
     }
 
-
-    private suspend fun deleteAppCard(appCardId:Long){
-        withContext(Dispatchers.IO){
+    private suspend fun deleteAppCard(appCardId: Long) {
+        withContext(Dispatchers.IO) {
             database.deleteAppCard(appCardId)
         }
     }
+
+    fun registerAddAppName() {
+        uiScope.launch {
+            addUserAppNameListStore =
+                addAppNameList.value!!.filter { it.addOrNot.value!! }.map { it.packageName }.toMutableList()
+            createAddAppCards(addUserAppNameListStore)
+        }
+    }
+
 }

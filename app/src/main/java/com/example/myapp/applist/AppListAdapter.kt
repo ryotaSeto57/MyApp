@@ -2,15 +2,19 @@ package com.example.myapp.applist
 
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupWindow
 import androidx.lifecycle.LifecycleOwner
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.database.AppCard
+import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
 import kotlinx.coroutines.CoroutineScope
 
@@ -18,13 +22,18 @@ private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
 private  const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
 
-class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val viewModel: AppListViewModel) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
+class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
+                     private val viewModel: AppListViewModel)
+    : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder) {
             is ViewHolder -> {
                 val item = getItem(position) as DataItem.AppCardItem
                 holder.bind(item.appCard, viewLifecycleOwner, viewModel)
+            }
+            is ButtonViewHolder ->{
+                holder.bind(viewLifecycleOwner, viewModel, holder.itemView)
             }
         }
     }
@@ -49,17 +58,28 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val
     fun submitReviewList(list: MutableList<AppCard>?){
         val items = when (list){
             null -> listOf(DataItem.AddAppButton)
-            else -> list.map{DataItem.AppCardItem(it)} + listOf(DataItem.AddAppButton) +listOf(DataItem.ShareButton)
+            else -> list.map{DataItem.AppCardItem(it)} +
+                    listOf(DataItem.AddAppButton) +listOf(DataItem.ShareButton)
         }
         submitList(items)
     }
 
-    class ButtonViewHolder(view: View): RecyclerView.ViewHolder(view){
+    class ButtonViewHolder private constructor(private val binding :AddAppButtonBinding): RecyclerView.ViewHolder(binding.root){
+        fun bind(viewLifecycleOwner: LifecycleOwner,viewModel: AppListViewModel,itemView:View){
+            binding.run {
+                appListViewModel = viewModel
+                lifecycleOwner = viewLifecycleOwner
+                addAppCardButton.setOnClickListener { button ->
+                    button.findNavController().navigate(R.id.action_appListFragment_to_addAppListFragment)
+                }
+                executePendingBindings()
+            }
+        }
         companion object{
             fun from(parent: ViewGroup): ButtonViewHolder{
                 val layoutInflater = LayoutInflater.from(parent.context)
-                val view = layoutInflater.inflate(R.layout.add_app_button, parent, false)
-                return ButtonViewHolder(view)
+                val binding = AddAppButtonBinding.inflate(layoutInflater, parent, false)
+                return ButtonViewHolder(binding)
             }
         }
     }
@@ -74,7 +94,9 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner, private val
         }
     }
 
-    class ViewHolder private constructor(private val binding: ListItemAppBinding, private val pm :PackageManager) : RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder private constructor(private val binding: ListItemAppBinding,
+                                         private val pm: PackageManager)
+        : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel){
             binding.run {
                 lifecycleOwner = viewLifecycleOwner
@@ -107,7 +129,6 @@ class AppDataDiffCallback : DiffUtil.ItemCallback<DataItem>(){
     override fun areContentsTheSame(oldItem: DataItem, newItem: DataItem): Boolean {
         return oldItem == newItem
     }
-
 }
 
 sealed class DataItem{
