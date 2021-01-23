@@ -4,6 +4,7 @@ apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'androidx.navigation.safeargs.kotlin'
+apply plugin: 'dagger.hilt.android.plugin'
 
 android {
     compileSdkVersion 29
@@ -27,7 +28,7 @@ android {
         }
     }
 
-    //ref https://qiita.com/que9/items/52725c3caf33f2a9b44e
+    //ref https://qiita.com/que9/items/52725c3caf33f2a9b44e, and for DI Hilt
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -70,7 +71,7 @@ dependencies {
     implementation "androidx.recyclerview:recyclerview:1.1.0"
 
 
-    //viewModel,liveData
+    //viewModel,liveData, fragment-ktx
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     kapt "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
@@ -95,4 +96,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-firestore:21.7.1'
     implementation 'com.google.firebase:firebase-storage-ktx:19.2.0'
 
+    //DI
+    implementation "com.google.dagger:hilt-android:2.28-alpha"
+    kapt "com.google.dagger:hilt-android-compiler:2.28-alpha"
 }

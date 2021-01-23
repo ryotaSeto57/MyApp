@@ -4,12 +4,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
     app:startDestination="@id/titleFragment">
-
     <fragment
         android:id="@+id/titleFragment"
         android:name="com.example.myapp.TitleFragment"
         android:label="fragment_title"
-        tools:layout="@layout/fragment_title" >
+        tools:layout="@layout/fragment_title">
         <action
             android:id="@+id/action_titleFragment_to_appListFragment"
             app:destination="@id/appListFragment" />
@@ -18,14 +17,11 @@
         android:id="@+id/appListFragment"
         android:name="com.example.myapp.applist.AppListFragment"
         android:label="fragment_app_list"
-        tools:layout="@layout/fragment_app_list" >
-        <action
-            android:id="@+id/action_appListFragment_to_titleFragment"
-            app:destination="@id/titleFragment" />
+        tools:layout="@layout/fragment_app_list">
         <argument
             android:name="createNewList"
-            app:argType="boolean"
-            android:defaultValue= "false"/>
+            android:defaultValue="false"
+            app:argType="boolean" />
         <action
             android:id="@+id/action_appListFragment_to_addAppListFragment"
             app:destination="@id/addAppListFragment" />
@@ -33,10 +29,11 @@
     <fragment
         android:id="@+id/addAppListFragment"
         android:name="com.example.myapp.applist.AddAppListFragment"
-        android:label="AddAppListFragment" >
+        android:label="AddAppListFragment">
         <action
             android:id="@+id/action_addAppListFragment_to_appListFragment"
-            app:destination="@id/appListFragment" />
+            app:destination="@id/appListFragment"
+            app:popUpTo="@id/titleFragment" />
     </fragment>
 
 </navigation>

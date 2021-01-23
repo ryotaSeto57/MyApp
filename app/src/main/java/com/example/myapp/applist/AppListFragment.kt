@@ -12,6 +12,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.navArgs
+import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
@@ -29,7 +31,9 @@ class AppListFragment : Fragment() {
     private lateinit var binding: FragmentAppListBinding
     private lateinit var application :Application
     private lateinit var dataSource :AppDatabaseDao
-    private val viewModel: AppListViewModel by activityViewModels { AppListViewModelFactory(dataSource,application,AppListFragmentArgs.fromBundle(requireArguments()).createNewList) }
+    private val args :AppListFragmentArgs  by navArgs()
+    private val viewModel: AppListViewModel by activityViewModels{AppListViewModelFactory(dataSource,application,args.createNewList)}
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -47,7 +51,13 @@ class AppListFragment : Fragment() {
             false
         ).apply {
             lifecycleOwner = viewLifecycleOwner
-            appList.adapter = adapter
+            appList.adapter = adapter.apply {
+                registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+                    override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                        appList.scrollToPosition(viewModel.topViewHolderPosition.value ?: 0)
+                    }
+                })
+            }
             appListViewModel = viewModel
             itemTouchHelper.attachToRecyclerView(appList)
         }
@@ -77,8 +87,8 @@ class AppListFragment : Fragment() {
             val fromPosition = viewHolder.adapterPosition
             val toPosition = target.adapterPosition
             viewModel.replaceAppData(fromPosition, toPosition)
-//                adapter.submitReviewList(viewModel.userAppReviewList.value)
-//                viewModel.sortUserAppReviewList()
+//            adapter.submitReviewList(viewModel.userAppReviewList.value)
+//            viewModel.sortUserAppReviewList()
             return true
         }
 

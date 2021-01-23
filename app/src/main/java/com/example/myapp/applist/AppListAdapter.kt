@@ -2,11 +2,9 @@ package com.example.myapp.applist
 
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.PopupWindow
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -16,7 +14,6 @@ import com.example.myapp.R
 import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
-import kotlinx.coroutines.CoroutineScope
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
@@ -70,6 +67,7 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
                 appListViewModel = viewModel
                 lifecycleOwner = viewLifecycleOwner
                 addAppCardButton.setOnClickListener { button ->
+                    viewModel.saveButtonPosition(adapterPosition)
                     button.findNavController().navigate(R.id.action_appListFragment_to_addAppListFragment)
                 }
                 executePendingBindings()

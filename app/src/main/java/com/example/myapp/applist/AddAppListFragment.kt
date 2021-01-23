@@ -9,8 +9,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
+import com.example.myapp.TitleFragmentDirections
 import com.example.myapp.database.AppDatabase
 import com.example.myapp.databinding.FragmentAddAppListBinding
 
@@ -23,7 +25,9 @@ class AddAppListFragment:Fragment() {
     ): View? {
         val application = requireNotNull(this.activity).application
         val dataSource = AppDatabase.getInstance(application).appDatabaseDao
-        val viewModel: AppListViewModel by activityViewModels{AppListViewModelFactory(dataSource,application,false)}
+        val viewModel: AppListViewModel by activityViewModels{
+            AppListViewModelFactory(dataSource,application)
+        }
         val adapter = AddAppListAdapter()
         binding = DataBindingUtil.inflate<FragmentAddAppListBinding>(
             inflater,
@@ -34,10 +38,14 @@ class AddAppListFragment:Fragment() {
             lifecycleOwner = viewLifecycleOwner
             appListViewModel = viewModel
             addAppList.adapter = adapter
-            addAppList.layoutManager = GridLayoutManager(context,5,GridLayoutManager.VERTICAL,false)
+            addAppList.layoutManager = GridLayoutManager(
+                context,5,GridLayoutManager.VERTICAL,false
+            )
             addAppButton.setOnClickListener { view ->
                 viewModel.registerAddAppName()
-                view.findNavController().navigate(R.id.action_addAppListFragment_to_appListFragment)
+                val action =
+                    AddAppListFragmentDirections.actionAddAppListFragmentToAppListFragment()
+                view.findNavController().navigate(action)
             }
         }
         viewModel.addAppNameList.observe(viewLifecycleOwner, Observer{
@@ -45,7 +53,6 @@ class AddAppListFragment:Fragment() {
                 adapter.submitList(it)
             }
         })
-
         return binding.root
     }
 }

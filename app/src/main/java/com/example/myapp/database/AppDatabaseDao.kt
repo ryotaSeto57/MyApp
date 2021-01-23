@@ -1,9 +1,6 @@
 package com.example.myapp.database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 
 
 @Dao
@@ -21,7 +18,7 @@ interface AppDatabaseDao {
     @Query("SELECT COUNT( * ) FROM review_list_table")
     fun countReviewList() : Int
 
-    @Insert
+    @Insert(onConflict =  OnConflictStrategy.REPLACE)
     fun insert(reviewList: ReviewList)
 
     @Query("SELECT * FROM review_list_table ORDER BY id DESC LIMIT 1")
