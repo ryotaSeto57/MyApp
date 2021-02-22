@@ -1,36 +1,41 @@
 package com.example.myapp.applist
 
-import android.app.Application
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
-import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.AddAppName
 import com.example.myapp.repository.AppListRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
+import javax.inject.Inject
 
-class AppListViewModel(
-    private val database: AppDatabaseDao,
-    private val myapplication: Application,
-    private val createNewList: Boolean) : ViewModel() {
+@HiltViewModel
+class AppListViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val appListRepository: AppListRepository
+) : ViewModel() {
 
-    private val repository: AppListRepository
     private val appListScope = viewModelScope
-    private val pm = myapplication.packageManager
+
+    private val createNewList =
+        savedStateHandle.getLiveData<Boolean>("createNewList", true)
 
     init {
         Log.i("AppListViewModel", "AppListViewModel created")
-        repository = AppListRepository(database,pm)
         setUserAppList()
     }
 
-    private val _userAppReviewList = MutableLiveData<MutableList<AppCard>>()
-    val userAppReviewList: LiveData<MutableList<AppCard>>
-        get() = _userAppReviewList
+    private val _userAppCardList = MutableLiveData<MutableList<AppCard>>()
+    val userAppCardList: LiveData<MutableList<AppCard>>
+        get() = _userAppCardList
+
+    val userReviewList: List<MutableLiveData<String>> = List(500){
+        savedStateHandle.getLiveData<String>("REVIEW_OF_ORIGINAL_INDEX$it",
+            "" )}
 
     private val _listOfAppName: LiveData<MutableList<String>> =
-        Transformations.map(userAppReviewList) {
+        Transformations.map(userAppCardList) {
             MutableList(it.size) { index ->
                 it[index].packageName
             }
@@ -38,7 +43,7 @@ class AppListViewModel(
 
     private val _listOfAddAppName: LiveData<MutableList<String>> =
         Transformations.map(_listOfAppName) { listOfAppName ->
-            val allUsersAppNameList = repository.getUserAppInfo()
+            val allUsersAppNameList = appListRepository.getUserAppInfo()
             for (packageName in listOfAppName) {
                 allUsersAppNameList.removeAll { it.packageName == packageName }
             }
@@ -53,35 +58,35 @@ class AppListViewModel(
         }
     }
 
-    val addAppNameList :LiveData<MutableList<AddAppName>> =
-        Transformations.map(_listOfAddAppName){
-            MutableList(it.size){index ->
+    val addAppNameList: LiveData<MutableList<AddAppName>> =
+        Transformations.map(_listOfAddAppName) {
+            MutableList(it.size) { index ->
                 AddAppName(it[index])
             }
         }
 
     private val _topViewHolderPosition = MutableLiveData<Int>()
-    val topViewHolderPosition :LiveData<Int>
+    val topViewHolderPosition: LiveData<Int>
         get() = _topViewHolderPosition
 
     private var userAppCardListStore: MutableList<AppCard> = mutableListOf()
     private var addUserAppNameListStore: MutableList<String> = mutableListOf()
 
 
-
     private fun setUserAppList() {
         appListScope.launch {
-            if (createNewList) {
-                repository.createNewList()
+            if (createNewList.value!!) {
+                appListRepository.createNewList()
+                createNewList.value = false
             }
-            _userAppReviewList.value = getAppCardsFromDatabase()
+            _userAppCardList.value = getAppCardsFromDatabase()
         }
     }
 
     private suspend fun getAppCardsFromDatabase(): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
-            val listId = repository.getLatestReviewList()!!.id
-            val appCards = repository.getList(listId).sortedBy { it.index }.toMutableList()
+            val listId = appListRepository.getLatestReviewList()!!.id
+            val appCards = appListRepository.getList(listId).sortedBy { it.index }.toMutableList()
             appCards
         }
     }
@@ -91,52 +96,54 @@ class AppListViewModel(
             val listAddAppCards: MutableList<AppCard> = MutableList(packageNameList.size) { index ->
                 AppCard(
                     id = 0,
-                    listId = _userAppReviewList.value!!.last().listId,
-                    index = _userAppReviewList.value!!.last().index + index + 1,
+                    listId = _userAppCardList.value!!.last().listId,
+                    originalIndex = userAppCardList.value!!.size + index,
+                    index = _userAppCardList.value!!.last().index + index + 1,
                     packageName = packageNameList[index]
                 )
             }
             for (appCard in listAddAppCards) {
-                repository.add(appCard)
+                appListRepository.add(appCard)
             }
-            userAppCardListStore = _userAppReviewList.value!!
+            userAppCardListStore = _userAppCardList.value!!
             userAppCardListStore.plusAssign(listAddAppCards)
-            _userAppReviewList.postValue(userAppCardListStore)
+            _userAppCardList.postValue(userAppCardListStore)
         }
     }
 
     private suspend fun saveAppCards() {
-        for ((index, appCard) in _userAppReviewList.value!!.withIndex()) {
+        for ((index, appCard) in _userAppCardList.value!!.withIndex()) {
             appCard.index = index
-            repository.save(appCard)
+            appCard.review = userReviewList[appCard.originalIndex].value!!
+            this.appListRepository.save(appCard)
         }
     }
 
     fun uploadUserAppList() {
         appListScope.launch {
-            if (_userAppReviewList.value!!.lastIndex < 300) {
+            if (_userAppCardList.value!!.lastIndex < 300) {
                 saveAppCards()
-                repository.shareList(_userAppReviewList.value!!)
+                appListRepository.shareList(_userAppCardList.value!!)
             }
         }
     }
 
     fun removeAppDataFromList(index: Int, appCardId: Long) {
         appListScope.launch {
-            repository.deleteAppCard(appCardId)
-            userAppCardListStore = _userAppReviewList.value!!
+            appListRepository.deleteAppCard(appCardId)
+            userAppCardListStore = _userAppCardList.value!!
             userAppCardListStore.removeAt(index)
-            for (i in index until _userAppReviewList.value!!.size) {
+            for (i in index until _userAppCardList.value!!.size) {
                 userAppCardListStore[i].index = i
             }
-            _userAppReviewList.value = userAppCardListStore
+            _userAppCardList.value = userAppCardListStore
         }
     }
 
     fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         appListScope.launch {
             withContext(Dispatchers.IO) {
-                userAppCardListStore = _userAppReviewList.value!!
+                userAppCardListStore = _userAppCardList.value!!
                 userAppCardListStore[indexOfFrom].index = indexOfTo
                 if (indexOfFrom < indexOfTo) {
                     for (i in indexOfFrom until indexOfTo) {
@@ -148,7 +155,7 @@ class AppListViewModel(
                     }
                 }
                 userAppCardListStore.sortBy { it.index }
-                _userAppReviewList.postValue(userAppCardListStore)
+                _userAppCardList.postValue(userAppCardListStore)
             }
         }
     }
@@ -162,8 +169,8 @@ class AppListViewModel(
         }
     }
 
-    fun saveButtonPosition(adapterPosition:Int){
-            _topViewHolderPosition.value = adapterPosition
+    fun saveButtonPosition(adapterPosition: Int) {
+        _topViewHolderPosition.value = adapterPosition
     }
 
 }

@@ -2,7 +2,7 @@ package com.example.myapp.repository
 
 import android.content.pm.ApplicationInfo
 import com.example.myapp.database.AppCard
-import com.example.myapp.database.ReviewList
+import com.example.myapp.database.AppCardList
 
 interface Repository {
 
@@ -18,7 +18,7 @@ interface Repository {
 
     suspend fun shareList(listOfAppCards: MutableList<AppCard>)
 
-    suspend fun getLatestReviewList():ReviewList?
+    suspend fun getLatestReviewList():AppCardList?
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
 }

@@ -99,6 +99,7 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
             binding.run {
                 lifecycleOwner = viewLifecycleOwner
                 appCard = item
+                this.appListViewModel = viewModel
                 val appInfo = pm.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES)
                 appImage.setImageDrawable(appInfo.loadIcon(pm))
                 appName.text = appInfo.loadLabel(pm).toString()

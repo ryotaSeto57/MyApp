@@ -9,9 +9,11 @@ import androidx.room.PrimaryKey
 
 data class AppCard constructor(
     @PrimaryKey(autoGenerate = true)
-    var id: Long,
+    val id: Long,
     @ColumnInfo(name = "list_id")
     val listId: Long,
+    @ColumnInfo(name = "original_index")
+    val originalIndex: Int,
     @ColumnInfo(name="index")
     var index: Int,
     @ColumnInfo(name = "package_name")

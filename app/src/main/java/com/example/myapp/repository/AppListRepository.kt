@@ -1,6 +1,7 @@
 package com.example.myapp.repository
 
 import android.content.ContentValues
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,18 +10,22 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
-import com.example.myapp.database.ReviewList
+import com.example.myapp.database.AppCardList
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
-class AppListRepository(
-    private val database: AppDatabaseDao, private val pm: PackageManager
+class AppListRepository @Inject constructor(
+    private val database: AppDatabaseDao,@ApplicationContext appContext: Context
 ) : Repository {
+
+    private val pm = appContext.packageManager
 
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
@@ -38,7 +43,7 @@ class AppListRepository(
         }
     }
 
-    override suspend fun getLatestReviewList(): ReviewList? {
+    override suspend fun getLatestReviewList(): AppCardList? {
         return withContext(Dispatchers.IO) {
             return@withContext database.getLatestReviewList()
         }
@@ -46,7 +51,7 @@ class AppListRepository(
 
     override suspend fun createNewList() {
         withContext(Dispatchers.IO) {
-            database.insert(ReviewList(0))
+            database.insert(AppCardList(0))
             val listId = getLatestReviewList()?.id ?: 0L
             val userAppInfoList = getUserAppInfo()
             for ((index, appInfo) in userAppInfoList.withIndex()) {
@@ -54,6 +59,7 @@ class AppListRepository(
                     AppCard(
                         id = 0,
                         listId = listId,
+                        originalIndex = index,
                         index = index,
                         packageName = appInfo.packageName
                     )
@@ -77,6 +83,7 @@ class AppListRepository(
     }
 
     override suspend fun save(card: AppCard) {
+
         withContext(Dispatchers.IO) {
             database.update(card)
         }

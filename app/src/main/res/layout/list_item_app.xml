@@ -7,6 +7,9 @@
         <variable
             name="appCard"
             type="com.example.myapp.database.AppCard" />
+        <variable
+            name="appListViewModel"
+            type="com.example.myapp.applist.AppListViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -38,7 +41,7 @@
             android:id="@+id/app_review_text"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:text="@={appCard.review}"
+            android:text="@={appListViewModel.userReviewList[appCard.originalIndex]}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/app_image"

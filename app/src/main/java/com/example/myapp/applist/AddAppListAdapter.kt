@@ -9,12 +9,17 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.database.AddAppName
 import com.example.myapp.databinding.ListItemAddAppBinding
+import dagger.hilt.android.AndroidEntryPoint
 
-class AddAppListAdapter: ListAdapter<AddAppName, AddAppListAdapter.AddAppListHolder>(AppNameDiffCallback()) {
+class AddAppListAdapter :
+    ListAdapter<AddAppName, AddAppListAdapter.AddAppListHolder>(AppNameDiffCallback()) {
 
-    class AddAppListHolder(private val binding: ListItemAddAppBinding, private val pm: PackageManager): RecyclerView.ViewHolder(binding.root){
-        fun bind(item:AddAppName){
-            val appInfo  = pm.getApplicationInfo(item.packageName,MATCH_UNINSTALLED_PACKAGES)
+    class AddAppListHolder(
+        private val binding: ListItemAddAppBinding,
+        private val pm: PackageManager
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: AddAppName) {
+            val appInfo = pm.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES)
             binding.run {
                 addAppImage.setImageDrawable(appInfo.loadIcon(pm))
                 addAppName = item
@@ -25,9 +30,9 @@ class AddAppListAdapter: ListAdapter<AddAppName, AddAppListAdapter.AddAppListHol
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddAppListHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
-        val binding = ListItemAddAppBinding.inflate(layoutInflater,parent,false)
+        val binding = ListItemAddAppBinding.inflate(layoutInflater, parent, false)
         val pm = parent.context.packageManager
-        return AddAppListHolder(binding,pm)
+        return AddAppListHolder(binding, pm)
     }
 
     override fun onBindViewHolder(holder: AddAppListHolder, position: Int) {
@@ -35,7 +40,7 @@ class AddAppListAdapter: ListAdapter<AddAppName, AddAppListAdapter.AddAppListHol
     }
 }
 
-class AppNameDiffCallback : DiffUtil.ItemCallback<AddAppName>(){
+class AppNameDiffCallback : DiffUtil.ItemCallback<AddAppName>() {
     override fun areItemsTheSame(oldItem: AddAppName, newItem: AddAppName): Boolean {
         return oldItem.packageName == newItem.packageName
     }

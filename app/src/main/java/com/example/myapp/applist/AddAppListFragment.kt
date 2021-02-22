@@ -9,13 +9,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
-import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
-import com.example.myapp.TitleFragmentDirections
-import com.example.myapp.database.AppDatabase
 import com.example.myapp.databinding.FragmentAddAppListBinding
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class AddAppListFragment:Fragment() {
     private lateinit var binding: FragmentAddAppListBinding
     override fun onCreateView(
@@ -23,11 +22,7 @@ class AddAppListFragment:Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val application = requireNotNull(this.activity).application
-        val dataSource = AppDatabase.getInstance(application).appDatabaseDao
-        val viewModel: AppListViewModel by activityViewModels{
-            AppListViewModelFactory(dataSource,application)
-        }
+        val viewModel: AppListViewModel by activityViewModels()
         val adapter = AddAppListAdapter()
         binding = DataBindingUtil.inflate<FragmentAddAppListBinding>(
             inflater,

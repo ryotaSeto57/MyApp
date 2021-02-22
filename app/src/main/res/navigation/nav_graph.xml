@@ -18,10 +18,6 @@
         android:name="com.example.myapp.applist.AppListFragment"
         android:label="fragment_app_list"
         tools:layout="@layout/fragment_app_list">
-        <argument
-            android:name="createNewList"
-            android:defaultValue="false"
-            app:argType="boolean" />
         <action
             android:id="@+id/action_appListFragment_to_addAppListFragment"
             app:destination="@id/addAppListFragment" />
