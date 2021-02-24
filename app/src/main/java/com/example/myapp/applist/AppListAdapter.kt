@@ -14,6 +14,7 @@ import com.example.myapp.R
 import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
+import com.example.myapp.databinding.ShareButtonBinding
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
@@ -29,8 +30,11 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
                 val item = getItem(position) as DataItem.AppCardItem
                 holder.bind(item.appCard, viewLifecycleOwner, viewModel)
             }
-            is ButtonViewHolder ->{
-                holder.bind(viewLifecycleOwner, viewModel, holder.itemView)
+            is ButtonViewHolder -> {
+                holder.bind(viewLifecycleOwner, viewModel)
+            }
+            is ShareButtonHolder -> {
+                holder.bind(viewModel)
             }
         }
     }
@@ -61,8 +65,10 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
         submitList(items)
     }
 
-    class ButtonViewHolder private constructor(private val binding :AddAppButtonBinding): RecyclerView.ViewHolder(binding.root){
-        fun bind(viewLifecycleOwner: LifecycleOwner,viewModel: AppListViewModel,itemView:View){
+    class ButtonViewHolder private constructor(
+        private val binding :AddAppButtonBinding
+        ): RecyclerView.ViewHolder(binding.root){
+        fun bind(viewLifecycleOwner: LifecycleOwner,viewModel: AppListViewModel){
             binding.run {
                 appListViewModel = viewModel
                 lifecycleOwner = viewLifecycleOwner
@@ -82,12 +88,20 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
         }
     }
 
-    class ShareButtonHolder(view: View): RecyclerView.ViewHolder(view){
+    class ShareButtonHolder private constructor(
+        private val binding : ShareButtonBinding
+    ): RecyclerView.ViewHolder(binding.root){
+        fun bind(viewModel: AppListViewModel){
+            binding.run {
+                this.appListViewModel = viewModel
+            }
+        }
+
         companion object{
             fun from(parent: ViewGroup): ShareButtonHolder{
                 val layoutInflater = LayoutInflater.from(parent.context)
-                val view = layoutInflater.inflate(R.layout.share_button, parent, false)
-                return ShareButtonHolder(view)
+                val binding = ShareButtonBinding.inflate(layoutInflater, parent, false)
+                return ShareButtonHolder(binding)
             }
         }
     }

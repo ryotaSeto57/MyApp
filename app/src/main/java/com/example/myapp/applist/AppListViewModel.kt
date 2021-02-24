@@ -118,7 +118,7 @@ class AppListViewModel @Inject constructor(
         for ((index, appCard) in _userAppCardList.value!!.withIndex()) {
             appCard.index = index
             appCard.review = userReviewList[appCard.originalIndex].value!!
-            this.appListRepository.save(appCard)
+            appListRepository.save(appCard)
         }
     }
 
