@@ -1,13 +1,14 @@
 package com.example.myapp.applist
 
-import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AddAppName
+import com.example.myapp.database.AppCardList
 import com.example.myapp.repository.AppListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,7 +23,7 @@ class AppListViewModel @Inject constructor(
         savedStateHandle.getLiveData<Boolean>("createNewList", true)
 
     init {
-        Log.i("AppListViewModel", "AppListViewModel created")
+        Timber.i("AppListViewModel created")
         setUserAppList()
     }
 
@@ -77,15 +78,17 @@ class AppListViewModel @Inject constructor(
         appListScope.launch {
             if (createNewList.value!!) {
                 appListRepository.createNewList()
-                createNewList.value = false
+                createNewList.postValue(false)
             }
-            _userAppCardList.value = getAppCardsFromDatabase()
+            val appCardList = getAppCardsFromDatabase()
+            _userAppCardList.postValue(appCardList)
         }
     }
 
     private suspend fun getAppCardsFromDatabase(): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
-            val listId = appListRepository.getLatestReviewList()!!.id
+            val list: AppCardList? = appListRepository.getAppCardList()
+            val listId: Long = list?.id ?:0L
             val appCards = appListRepository.getList(listId).sortedBy { it.index }.toMutableList()
             appCards
         }

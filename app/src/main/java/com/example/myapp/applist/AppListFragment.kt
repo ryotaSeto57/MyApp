@@ -2,6 +2,7 @@ package com.example.myapp.applist
 
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +18,10 @@ import com.example.myapp.R
 import com.example.myapp.database.AppDatabase
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.databinding.FragmentAppListBinding
+import com.google.android.material.tabs.TabLayout
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.list_item_app.view.*
+import timber.log.Timber
 
 /**
  * A simple [Fragment] subclass.
@@ -64,6 +67,12 @@ class AppListFragment : Fragment() {
 
         return binding.root
     }
+
+    override fun onDestroy() {
+        Timber.i("AppListFragment is destroyed.")
+        super.onDestroy()
+    }
+
 
     private val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
 

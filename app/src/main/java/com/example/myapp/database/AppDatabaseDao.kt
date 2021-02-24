@@ -6,7 +6,8 @@ import androidx.room.*
 @Dao
 interface AppDatabaseDao {
 
-    @Insert
+
+    @Insert(onConflict =  OnConflictStrategy.REPLACE)
     fun insert(appCard: AppCard)
 
     @Update
@@ -18,7 +19,7 @@ interface AppDatabaseDao {
     @Query("SELECT COUNT( * ) FROM app_card_list_table")
     fun countReviewList() : Int
 
-    @Insert(onConflict =  OnConflictStrategy.REPLACE)
+    @Insert
     fun insert(appCardList: AppCardList)
 
     @Query("SELECT * FROM app_card_list_table ORDER BY id DESC LIMIT 1")

@@ -1,13 +1,11 @@
 package com.example.myapp.repository
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.util.Log
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.AppCardList
@@ -18,6 +16,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
@@ -43,7 +42,7 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getLatestReviewList(): AppCardList? {
+    override suspend fun getAppCardList(): AppCardList? {
         return withContext(Dispatchers.IO) {
             return@withContext database.getLatestReviewList()
         }
@@ -52,10 +51,10 @@ class AppListRepository @Inject constructor(
     override suspend fun createNewList() {
         withContext(Dispatchers.IO) {
             database.insert(AppCardList(0))
-            val listId = getLatestReviewList()?.id ?: 0L
+            val listId = getAppCardList()?.id ?: 0L
             val userAppInfoList = getUserAppInfo()
             for ((index, appInfo) in userAppInfoList.withIndex()) {
-                database.insert(
+                add(
                     AppCard(
                         id = 0,
                         listId = listId,
@@ -83,7 +82,6 @@ class AppListRepository @Inject constructor(
     }
 
     override suspend fun save(card: AppCard) {
-
         withContext(Dispatchers.IO) {
             database.update(card)
         }
@@ -117,7 +115,7 @@ class AppListRepository @Inject constructor(
                 }
                 uri.getOrNull()
                     ?.also { appCard.downloadUrl = it.toString() }
-                    ?: Log.w(ContentValues.TAG, "error in uploading $appUid")
+                    ?: Timber.w( "error in uploading $appUid")
             }
             val userAppCards: MutableMap<String, Any> = mutableMapOf()
             for ((index, appCard) in listOfAppCards.withIndex()) {
@@ -133,7 +131,7 @@ class AppListRepository @Inject constructor(
             try {
                 db.collection("users").add(userAppCards).await()
             } catch (e: Exception) {
-                Log.w(ContentValues.TAG, "Error adding document", e)
+                Timber.w("Error adding document")
             }
         }
     }

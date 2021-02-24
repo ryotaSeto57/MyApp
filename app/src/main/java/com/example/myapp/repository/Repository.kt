@@ -18,7 +18,7 @@ interface Repository {
 
     suspend fun shareList(listOfAppCards: MutableList<AppCard>)
 
-    suspend fun getLatestReviewList():AppCardList?
+    suspend fun getAppCardList():AppCardList?
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
 }
