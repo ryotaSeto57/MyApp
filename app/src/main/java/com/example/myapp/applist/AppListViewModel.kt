@@ -176,4 +176,8 @@ class AppListViewModel @Inject constructor(
         _topViewHolderPosition.value = adapterPosition
     }
 
+    fun changeEditability(appCard: AppCard){
+        appCard.editable.value = !appCard.editable.value!!
+    }
+
 }

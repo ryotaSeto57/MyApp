@@ -1,9 +1,7 @@
 package com.example.myapp.database
 
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.lifecycle.MutableLiveData
+import androidx.room.*
 
 @Entity(tableName = "app_card_table")
 
@@ -23,4 +21,6 @@ data class AppCard constructor(
     var review : String = ""
     @ColumnInfo(name="download_url")
     var downloadUrl : String = ""
+    @Ignore
+    var editable :MutableLiveData<Boolean> = MutableLiveData(false)
 }

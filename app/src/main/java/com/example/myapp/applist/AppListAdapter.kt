@@ -3,7 +3,6 @@ package com.example.myapp.applist
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
@@ -106,7 +105,7 @@ class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
         }
     }
 
-    class ViewHolder private constructor(private val binding: ListItemAppBinding,
+    class ViewHolder private constructor(val binding: ListItemAppBinding,
                                          private val pm: PackageManager)
         : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel){
