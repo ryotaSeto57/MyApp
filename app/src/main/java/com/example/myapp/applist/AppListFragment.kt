@@ -73,7 +73,10 @@ class AppListFragment : Fragment() {
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder
         ): Int {
-            return makeMovementFlags(UP or DOWN, LEFT)
+            return when(viewHolder) {
+                is AppListAdapter.ViewHolder -> makeMovementFlags(UP or DOWN, LEFT)
+                else -> ACTION_STATE_IDLE
+            }
         }
 
         override fun onMove(
@@ -81,10 +84,15 @@ class AppListFragment : Fragment() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            val fromPosition = viewHolder.adapterPosition
-            val toPosition = target.adapterPosition
-            viewModel.replaceAppData(fromPosition, toPosition)
-            return true
+            return when(target) {
+                is AppListAdapter.ViewHolder -> {
+                    val fromPosition = viewHolder.adapterPosition
+                    val toPosition = target.adapterPosition
+                    viewModel.replaceAppData(fromPosition, toPosition)
+                    true
+                }
+                else -> false
+            }
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
