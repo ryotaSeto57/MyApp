@@ -11,7 +11,7 @@
 
         <variable
             name="appListViewModel"
-            type="com.example.myapp.applist.AppListViewModel" />
+            type="com.example.myapp.page.AppListViewModel" />
         
         <import type="android.view.View"/>
     </data>

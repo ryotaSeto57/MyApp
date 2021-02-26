@@ -1,4 +1,4 @@
-package com.example.myapp.applist
+package com.example.myapp.page.applist
 
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
@@ -14,6 +14,7 @@ import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
 import com.example.myapp.databinding.ShareButtonBinding
+import com.example.myapp.page.AppListViewModel
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1

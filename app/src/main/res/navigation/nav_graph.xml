@@ -15,7 +15,7 @@
     </fragment>
     <fragment
         android:id="@+id/appListFragment"
-        android:name="com.example.myapp.applist.AppListFragment"
+        android:name="com.example.myapp.page.applist.AppListFragment"
         android:label="fragment_app_list"
         tools:layout="@layout/fragment_app_list">
         <action
@@ -24,7 +24,7 @@
     </fragment>
     <fragment
         android:id="@+id/addAppListFragment"
-        android:name="com.example.myapp.applist.AddAppListFragment"
+        android:name="com.example.myapp.page.addapplist.AddAppListFragment"
         android:label="AddAppListFragment">
         <action
             android:id="@+id/action_addAppListFragment_to_appListFragment"

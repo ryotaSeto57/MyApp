@@ -2,13 +2,13 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".applist.AppListFragment">
+    tools:context=".page.applist.AppListFragment">
 
     <data>
 
         <variable
             name="appListViewModel"
-            type="com.example.myapp.applist.AppListViewModel" />
+            type="com.example.myapp.page.AppListViewModel" />
     </data>
 
 

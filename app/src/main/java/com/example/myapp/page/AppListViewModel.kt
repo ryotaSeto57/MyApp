@@ -1,4 +1,4 @@
-package com.example.myapp.applist
+package com.example.myapp.page
 
 import android.view.View
 import androidx.lifecycle.*

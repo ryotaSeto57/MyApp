@@ -1,4 +1,4 @@
-package com.example.myapp.applist
+package com.example.myapp.page.addapplist
 
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.database.AddAppName
 import com.example.myapp.databinding.ListItemAddAppBinding
-import dagger.hilt.android.AndroidEntryPoint
 
 class AddAppListAdapter :
     ListAdapter<AddAppName, AddAppListAdapter.AddAppListHolder>(AppNameDiffCallback()) {

@@ -5,7 +5,7 @@
     <data>
         <variable
             name="appListViewModel"
-            type="com.example.myapp.applist.AppListViewModel" />
+            type="com.example.myapp.page.AppListViewModel" />
         <variable
             name="addAppName"
             type="com.example.myapp.database.AddAppName" />

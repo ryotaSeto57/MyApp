@@ -1,4 +1,4 @@
-package com.example.myapp.applist
+package com.example.myapp.page.addapplist
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,6 +12,8 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAddAppListBinding
+import com.example.myapp.page.addapplist.AddAppListAdapter
+import com.example.myapp.page.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
