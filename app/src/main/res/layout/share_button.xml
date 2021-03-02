@@ -6,7 +6,7 @@
     <data>
         <variable
             name="appListViewModel"
-            type="com.example.myapp.page.AppListViewModel" />
+            type="com.example.myapp.page.applist.AppListViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

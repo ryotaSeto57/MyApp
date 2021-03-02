@@ -20,5 +20,9 @@ interface Repository {
 
     suspend fun getAppCardList():AppCardList?
 
+    suspend fun getAppCardLists():MutableList<AppCardList>
+
+    suspend fun getAllAppCards():MutableList<AppCard>
+
     fun getUserAppInfo(): MutableList<ApplicationInfo>
 }

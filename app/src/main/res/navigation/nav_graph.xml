@@ -6,7 +6,7 @@
     app:startDestination="@id/titleFragment">
     <fragment
         android:id="@+id/titleFragment"
-        android:name="com.example.myapp.TitleFragment"
+        android:name="com.example.myapp.page.title.TitleFragment"
         android:label="fragment_title"
         tools:layout="@layout/fragment_title">
         <action

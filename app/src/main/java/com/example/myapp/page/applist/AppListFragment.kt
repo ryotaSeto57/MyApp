@@ -13,8 +13,6 @@ import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
-import com.example.myapp.page.applist.AppListAdapter
-import com.example.myapp.page.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 

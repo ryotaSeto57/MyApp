@@ -12,8 +12,7 @@ import androidx.navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAddAppListBinding
-import com.example.myapp.page.addapplist.AddAppListAdapter
-import com.example.myapp.page.AppListViewModel
+import com.example.myapp.page.applist.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

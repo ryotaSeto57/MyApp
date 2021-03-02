@@ -48,6 +48,12 @@ class AppListRepository @Inject constructor(
         }
     }
 
+    override suspend fun getAllAppCards(): MutableList<AppCard> {
+        return withContext(Dispatchers.IO){
+            return@withContext database.getAllAppCards()
+        }
+    }
+
     override suspend fun createNewList() {
         withContext(Dispatchers.IO) {
             database.insert(AppCardList(0))
@@ -64,6 +70,12 @@ class AppListRepository @Inject constructor(
                     )
                 )
             }
+        }
+    }
+
+    override suspend fun getAppCardLists(): MutableList<AppCardList> {
+        return withContext(Dispatchers.IO){
+            return@withContext database.getAppCardLists()
         }
     }
 

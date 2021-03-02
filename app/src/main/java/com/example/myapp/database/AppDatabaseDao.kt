@@ -28,4 +28,9 @@ interface AppDatabaseDao {
     @Query("DELETE FROM app_card_table WHERE id = :key")
     fun deleteAppCard(key:Long)
 
+    @Query("SELECT * FROM app_card_list_table ORDER BY id")
+    fun getAppCardLists(): MutableList<AppCardList>
+
+    @Query("SELECT * FROM app_card_table ")
+    fun getAllAppCards(): MutableList<AppCard>
 }

@@ -14,15 +14,15 @@ import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
 import com.example.myapp.databinding.ShareButtonBinding
-import com.example.myapp.page.AppListViewModel
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
 private  const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
 
-class AppListAdapter(private val viewLifecycleOwner: LifecycleOwner,
-                     private val viewModel: AppListViewModel)
-    : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
+class AppListAdapter(
+    private val viewLifecycleOwner: LifecycleOwner,
+    private val viewModel: AppListViewModel
+) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder) {
