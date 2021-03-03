@@ -24,7 +24,7 @@ class AddAppListFragment:Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val viewModel: AppListViewModel by activityViewModels()
-        val adapter = AddAppListAdapter()
+        val adapter = AddAppListAdapter(viewModel)
         binding = DataBindingUtil.inflate<FragmentAddAppListBinding>(
             inflater,
             R.layout.fragment_add_app_list,
@@ -36,17 +36,21 @@ class AddAppListFragment:Fragment() {
             addAppList.adapter = adapter
             addAppList.layoutManager = GridLayoutManager(
                 context,5,GridLayoutManager.VERTICAL,false
-            )
-            addAppButton.setOnClickListener { view ->
-                viewModel.registerAddAppName()
-                val action =
-                    AddAppListFragmentDirections.actionAddAppListFragmentToAppListFragment()
-                view.findNavController().navigate(action)
+            ).apply {
+                spanSizeLookup = object :GridLayoutManager.SpanSizeLookup(){
+                    override fun getSpanSize(position: Int): Int {
+                        if(adapter.getItemViewType(position) == ITEM_VIEW_TYPE_ADD_BUTTON){
+                            return 5
+                        }
+                        return 1
+                    }
+
+                }
             }
         }
         viewModel.addAppNameList.observe(viewLifecycleOwner, Observer{
             it?.let {
-                adapter.submitList(it)
+                adapter.submitAddAppList(it)
             }
         })
         return binding.root

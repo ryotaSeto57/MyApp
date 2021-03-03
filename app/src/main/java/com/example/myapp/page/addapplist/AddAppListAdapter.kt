@@ -4,17 +4,25 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.database.AddAppName
-import com.example.myapp.databinding.ListItemAddAppBinding
+import com.example.myapp.databinding.AddListItemAppBinding
+import com.example.myapp.databinding.AddListItemButtonBinding
+import com.example.myapp.page.applist.AppListViewModel
 
-class AddAppListAdapter :
-    ListAdapter<AddAppName, AddAppListAdapter.AddAppListHolder>(AppNameDiffCallback()) {
+const val ITEM_VIEW_TYPE_APP_ITEM = 0
+const val ITEM_VIEW_TYPE_ADD_BUTTON = 1
 
-    class AddAppListHolder(
-        private val binding: ListItemAddAppBinding,
+class AddAppListAdapter(
+    private val appListViewModel: AppListViewModel
+) : ListAdapter<AddDataItem, RecyclerView.ViewHolder>(AppNameDiffCallback()) {
+
+
+    class AddAppHolder(
+        private val binding: AddListItemAppBinding,
         private val pm: PackageManager
     ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(item: AddAppName) {
@@ -25,27 +33,95 @@ class AddAppListAdapter :
                 executePendingBindings()
             }
         }
+
+        companion object {
+            fun from(parent: ViewGroup): AddAppHolder {
+                val layoutInflater = LayoutInflater.from(parent.context)
+                val binding = AddListItemAppBinding.inflate(layoutInflater, parent, false)
+                val pm = parent.context.packageManager
+                return AddAppHolder(binding, pm)
+            }
+        }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AddAppListHolder {
-        val layoutInflater = LayoutInflater.from(parent.context)
-        val binding = ListItemAddAppBinding.inflate(layoutInflater, parent, false)
-        val pm = parent.context.packageManager
-        return AddAppListHolder(binding, pm)
+    class AddButtonHolder(
+        private val binding: AddListItemButtonBinding,
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(viewModel: AppListViewModel) {
+            binding.run {
+                appListViewModel = viewModel
+                addAppButton.setOnClickListener { view ->
+                    viewModel.registerAddAppName()
+                    val action =
+                        AddAppListFragmentDirections.actionAddAppListFragmentToAppListFragment()
+                    view.findNavController().navigate(action)
+                }
+            }
+        }
+
+        companion object {
+            fun from(parent: ViewGroup): AddButtonHolder {
+                val layoutInflater = LayoutInflater.from(parent.context)
+                val binding = AddListItemButtonBinding.inflate(layoutInflater, parent, false)
+                return AddButtonHolder(binding)
+            }
+        }
     }
 
-    override fun onBindViewHolder(holder: AddAppListHolder, position: Int) {
-        holder.bind(getItem(position))
+    fun submitAddAppList(list: MutableList<AddAppName>) {
+        val items = when (list) {
+            null -> listOf(AddDataItem.AddAppButton)
+            else -> list.map { AddDataItem.AppItem(it) } + listOf(AddDataItem.AddAppButton)
+        }
+        submitList(items)
+    }
+
+override fun getItemViewType(position: Int): Int {
+    return when (getItem(position)) {
+        is AddDataItem.AppItem -> ITEM_VIEW_TYPE_APP_ITEM
+        is AddDataItem.AddAppButton -> ITEM_VIEW_TYPE_ADD_BUTTON
     }
 }
 
-class AppNameDiffCallback : DiffUtil.ItemCallback<AddAppName>() {
-    override fun areItemsTheSame(oldItem: AddAppName, newItem: AddAppName): Boolean {
-        return oldItem.packageName == newItem.packageName
+override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    return when (viewType) {
+        ITEM_VIEW_TYPE_APP_ITEM -> AddAppHolder.from(parent)
+        ITEM_VIEW_TYPE_ADD_BUTTON -> AddButtonHolder.from(parent)
+        else -> throw ClassCastException("Unknown viewType $viewType")
+    }
+}
+
+override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+    when (holder) {
+        is AddAppHolder -> {
+            val item = getItem(position) as AddDataItem.AppItem
+            holder.bind(item.addAppName)
+        }
+        is AddButtonHolder -> holder.bind(appListViewModel)
+    }
+}
+}
+
+class AppNameDiffCallback : DiffUtil.ItemCallback<AddDataItem>() {
+    override fun areItemsTheSame(oldItem: AddDataItem, newItem: AddDataItem): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: AddAppName, newItem: AddAppName): Boolean {
-        return oldItem.addOrNot.value == newItem.addOrNot.value
+    override fun areContentsTheSame(oldItem: AddDataItem, newItem: AddDataItem): Boolean {
+        return oldItem.id == newItem.id
     }
 
+}
+
+sealed class AddDataItem {
+
+    data class AppItem(val addAppName: AddAppName) : AddDataItem() {
+        override val id: Long = addAppName.id
+    }
+
+    object AddAppButton : AddDataItem() {
+        override val id: Long = Long.MAX_VALUE
+    }
+
+    abstract val id: Long
 }

@@ -62,7 +62,7 @@ class AppListViewModel @Inject constructor(
     val addAppNameList: LiveData<MutableList<AddAppName>> =
         Transformations.map(_listOfAddAppName) {
             MutableList(it.size) { index ->
-                AddAppName(it[index])
+                AddAppName(index.toLong(),it[index])
             }
         }
 

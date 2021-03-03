@@ -30,7 +30,7 @@ class AppListAdapter(
                 val item = getItem(position) as DataItem.AppCardItem
                 holder.bind(item.appCard, viewLifecycleOwner, viewModel)
             }
-            is ButtonViewHolder -> {
+            is ButtonHolder -> {
                 holder.bind(viewLifecycleOwner, viewModel)
             }
             is ShareButtonHolder -> {
@@ -42,7 +42,7 @@ class AppListAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType){
             ITEM_VIEW_TYPE_ITEM -> ViewHolder.from(parent)
-            ITEM_VIEW_TYPE_BUTTON -> ButtonViewHolder.from(parent)
+            ITEM_VIEW_TYPE_BUTTON -> ButtonHolder.from(parent)
             ITEM_VIEW_TYPE_SHARE_BUTTON -> ShareButtonHolder.from(parent)
             else -> throw ClassCastException("Unknown viewType $viewType")
         }
@@ -65,7 +65,7 @@ class AppListAdapter(
         submitList(items)
     }
 
-    class ButtonViewHolder private constructor(
+    class ButtonHolder private constructor(
         private val binding :AddAppButtonBinding
         ): RecyclerView.ViewHolder(binding.root){
         fun bind(viewLifecycleOwner: LifecycleOwner,viewModel: AppListViewModel){
@@ -80,10 +80,10 @@ class AppListAdapter(
             }
         }
         companion object{
-            fun from(parent: ViewGroup): ButtonViewHolder{
+            fun from(parent: ViewGroup): ButtonHolder{
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = AddAppButtonBinding.inflate(layoutInflater, parent, false)
-                return ButtonViewHolder(binding)
+                return ButtonHolder(binding)
             }
         }
     }
