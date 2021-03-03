@@ -10,12 +10,17 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
 import com.example.myapp.database.AppCardList
 import com.example.myapp.databinding.TitleItemCardBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class TitleListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
     private val titleViewModel: TitleViewModel
-) :
-    ListAdapter<TitleDataItem, RecyclerView.ViewHolder>(TitleDataDiffCallback()) {
+) : ListAdapter<TitleDataItem, RecyclerView.ViewHolder>(TitleDataDiffCallback()) {
+
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return ViewHolder.from(parent)
@@ -25,22 +30,30 @@ class TitleListAdapter(
         when (holder) {
             is ViewHolder -> {
                 val item = getItem(position) as TitleDataItem.AppCardListItem
-                return holder.bind(viewLifecycleOwner,titleViewModel,item.appCardList)
+                return holder.bind(viewLifecycleOwner, titleViewModel, item.appCardList)
             }
         }
     }
 
     fun submitAppCardList(list: MutableList<AppCardList>) {
-        val items = when (list) {
-            null -> listOf(TitleDataItem.AppCardListItem(AppCardList(id = 1000L)))
-            else -> list.map { TitleDataItem.AppCardListItem(it) }
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(TitleDataItem.AppCardListItem(AppCardList(id = 1000L)))
+                else -> list.map { TitleDataItem.AppCardListItem(it) }
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
         }
-        submitList(items)
     }
 
     class ViewHolder private constructor(private val binding: TitleItemCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(viewLifecycleOwner: LifecycleOwner,titleViewModel: TitleViewModel, item: AppCardList) {
+        fun bind(
+            viewLifecycleOwner: LifecycleOwner,
+            titleViewModel: TitleViewModel,
+            item: AppCardList
+        ) {
             binding.run {
                 appCardList = item
                 appImageList.apply {

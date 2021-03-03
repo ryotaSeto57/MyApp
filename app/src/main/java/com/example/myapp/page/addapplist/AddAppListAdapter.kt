@@ -12,6 +12,10 @@ import com.example.myapp.database.AddAppName
 import com.example.myapp.databinding.AddListItemAppBinding
 import com.example.myapp.databinding.AddListItemButtonBinding
 import com.example.myapp.page.applist.AppListViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 const val ITEM_VIEW_TYPE_APP_ITEM = 0
 const val ITEM_VIEW_TYPE_ADD_BUTTON = 1
@@ -20,6 +24,7 @@ class AddAppListAdapter(
     private val appListViewModel: AppListViewModel
 ) : ListAdapter<AddDataItem, RecyclerView.ViewHolder>(AppNameDiffCallback()) {
 
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
 
     class AddAppHolder(
         private val binding: AddListItemAppBinding,
@@ -69,11 +74,15 @@ class AddAppListAdapter(
     }
 
     fun submitAddAppList(list: MutableList<AddAppName>) {
-        val items = when (list) {
-            null -> listOf(AddDataItem.AddAppButton)
-            else -> list.map { AddDataItem.AppItem(it) } + listOf(AddDataItem.AddAppButton)
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(AddDataItem.AddAppButton)
+                else -> list.map { AddDataItem.AppItem(it) } + listOf(AddDataItem.AddAppButton)
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
         }
-        submitList(items)
     }
 
 override fun getItemViewType(position: Int): Int {

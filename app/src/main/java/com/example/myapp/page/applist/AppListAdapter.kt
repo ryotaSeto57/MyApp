@@ -14,6 +14,10 @@ import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.AddAppButtonBinding
 import com.example.myapp.databinding.ListItemAppBinding
 import com.example.myapp.databinding.ShareButtonBinding
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val  ITEM_VIEW_TYPE_ITEM = 0
 private const val  ITEM_VIEW_TYPE_BUTTON = 1
@@ -23,6 +27,8 @@ class AppListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
     private val viewModel: AppListViewModel
 ) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
+
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when(holder) {
@@ -57,12 +63,16 @@ class AppListAdapter(
     }
 
     fun submitReviewList(list: MutableList<AppCard>?){
-        val items = when (list){
-            null -> listOf(DataItem.AddAppButton)
-            else -> list.map{DataItem.AppCardItem(it)} +
-                    listOf(DataItem.AddAppButton) +listOf(DataItem.ShareButton)
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(DataItem.AddAppButton)
+                else -> list.map { DataItem.AppCardItem(it) } +
+                        listOf(DataItem.AddAppButton) + listOf(DataItem.ShareButton)
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
         }
-        submitList(items)
     }
 
     class ButtonHolder private constructor(
