@@ -11,25 +11,33 @@
         tools:layout="@layout/fragment_title">
         <action
             android:id="@+id/action_titleFragment_to_appListFragment"
-            app:destination="@id/appListFragment" />
+            app:destination="@id/app_navigation" />
     </fragment>
-    <fragment
-        android:id="@+id/appListFragment"
-        android:name="com.example.myapp.page.applist.AppListFragment"
-        android:label="fragment_app_list"
-        tools:layout="@layout/fragment_app_list">
-        <action
-            android:id="@+id/action_appListFragment_to_addAppListFragment"
-            app:destination="@id/addAppListFragment" />
-    </fragment>
-    <fragment
-        android:id="@+id/addAppListFragment"
-        android:name="com.example.myapp.page.addapplist.AddAppListFragment"
-        android:label="AddAppListFragment">
-        <action
-            android:id="@+id/action_addAppListFragment_to_appListFragment"
-            app:destination="@id/appListFragment"
-            app:popUpTo="@id/titleFragment" />
-    </fragment>
+    <navigation android:id="@+id/app_navigation"
+        app:startDestination="@id/appListFragment">
+        <argument
+            android:name="listId"
+            app:argType="long"
+            android:defaultValue="1L" />
+        <fragment
+            android:id="@+id/appListFragment"
+            android:name="com.example.myapp.page.applist.AppListFragment"
+            android:label="fragment_app_list"
+            tools:layout="@layout/fragment_app_list">
+            <action
+                android:id="@+id/action_appListFragment_to_addAppListFragment"
+                app:destination="@id/addAppListFragment" />
+
+        </fragment>
+        <fragment
+            android:id="@+id/addAppListFragment"
+            android:name="com.example.myapp.page.addapplist.AddAppListFragment"
+            android:label="AddAppListFragment">
+            <action
+                android:id="@+id/action_addAppListFragment_to_appListFragment"
+                app:destination="@id/appListFragment"
+                />
+        </fragment>
+    </navigation>
 
 </navigation>

@@ -3,6 +3,7 @@ package com.example.myapp.page.title
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -62,6 +63,11 @@ class TitleListAdapter(
                     }
                     layoutManager = LinearLayoutManager(context, HORIZONTAL, false)
                 }
+                titleListContainer.setOnClickListener { view ->
+                    val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id)
+                    view.findNavController().navigate(action)
+                }
+
                 lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()
             }

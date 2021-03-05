@@ -20,7 +20,7 @@ class AppListViewModel @Inject constructor(
     private val appListScope = viewModelScope
 
     private val createNewList =
-        savedStateHandle.getLiveData<Boolean>("createNewList", true)
+        savedStateHandle.getLiveData<Boolean>("createNewList", false)
 
     init {
         Timber.i("AppListViewModel created")
