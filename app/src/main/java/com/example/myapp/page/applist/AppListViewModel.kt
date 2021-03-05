@@ -11,6 +11,8 @@ import kotlinx.coroutines.*
 import timber.log.Timber
 import javax.inject.Inject
 
+private const val MAX_NUMBER_OF_APPS = 500
+
 @HiltViewModel
 class AppListViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
@@ -18,6 +20,9 @@ class AppListViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val appListScope = viewModelScope
+
+    private val listId =
+        savedStateHandle.get<Long>("listId")
 
     private val createNewList =
         savedStateHandle.getLiveData<Boolean>("createNewList", false)
@@ -31,7 +36,7 @@ class AppListViewModel @Inject constructor(
     val userAppCardList: LiveData<MutableList<AppCard>>
         get() = _userAppCardList
 
-    val userReviewList: List<MutableLiveData<String>> = List(500){
+    val userReviewList: List<MutableLiveData<String>> = List(MAX_NUMBER_OF_APPS){
         savedStateHandle.getLiveData<String>("REVIEW_OF_ORIGINAL_INDEX$it",
             "" )}
 
@@ -87,8 +92,7 @@ class AppListViewModel @Inject constructor(
 
     private suspend fun getAppCardsFromDatabase(): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
-            val list: AppCardList? = appListRepository.getAppCardList()
-            val listId: Long = list?.id ?:0L
+            val listId: Long = listId ?:0L
             val appCards = appListRepository.getList(listId).sortedBy { it.index }.toMutableList()
             appCards
         }
@@ -124,7 +128,7 @@ class AppListViewModel @Inject constructor(
 
     fun uploadUserAppList() {
         appListScope.launch {
-            if (_userAppCardList.value!!.lastIndex < 300) {
+            if (_userAppCardList.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
                 saveAppCards()
                 appListRepository.shareList(_userAppCardList.value!!)
             }

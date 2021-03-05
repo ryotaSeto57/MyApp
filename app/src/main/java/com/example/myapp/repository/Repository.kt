@@ -18,11 +18,12 @@ interface Repository {
 
     suspend fun shareList(listOfAppCards: MutableList<AppCard>)
 
-    suspend fun getAppCardList():AppCardList?
+    suspend fun getLatestAppCardList():AppCardList?
 
     suspend fun getAppCardLists():MutableList<AppCardList>
 
     suspend fun getAllAppCards():MutableList<AppCard>
+
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
 }

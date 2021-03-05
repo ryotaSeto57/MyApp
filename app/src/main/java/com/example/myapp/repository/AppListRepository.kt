@@ -42,7 +42,7 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getAppCardList(): AppCardList? {
+    override suspend fun getLatestAppCardList(): AppCardList? {
         return withContext(Dispatchers.IO) {
             return@withContext database.getLatestReviewList()
         }
@@ -57,7 +57,7 @@ class AppListRepository @Inject constructor(
     override suspend fun createNewList() {
         withContext(Dispatchers.IO) {
             database.insert(AppCardList(0))
-            val listId = getAppCardList()?.id ?: 0L
+            val listId = getLatestAppCardList()?.id ?: 0L
             val userAppInfoList = getUserAppInfo()
             for ((index, appInfo) in userAppInfoList.withIndex()) {
                 add(
