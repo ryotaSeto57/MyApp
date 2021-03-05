@@ -3,6 +3,7 @@ package com.example.myapp.page.title
 import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -42,7 +43,14 @@ class TitleAppImageAdapter(
                     item.packageName,
                     PackageManager.MATCH_UNINSTALLED_PACKAGES
                 )
-                appImage.setImageDrawable(appInfo.loadIcon(pm))
+                appImage.apply {
+                    setImageDrawable(appInfo.loadIcon(pm))
+                    setOnClickListener { view ->
+                        val action =
+                            TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.listId)
+                        view.findNavController().navigate(action)
+                    }
+                }
                 executePendingBindings()
             }
         }
