@@ -6,7 +6,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -54,7 +53,7 @@ class AppListFragment : Fragment() {
             itemTouchHelper.attachToRecyclerView(appList)
         }
 
-        viewModel.userAppCardList.observe(viewLifecycleOwner, Observer {
+        viewModel.userAppCards.observe(viewLifecycleOwner, Observer {
             it?.let {
                 adapter.submitReviewList(it)
             }

@@ -4,7 +4,6 @@ import android.view.View
 import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AddAppName
-import com.example.myapp.database.AppCardList
 import com.example.myapp.repository.AppListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
@@ -25,23 +24,23 @@ class AppListViewModel @Inject constructor(
         savedStateHandle.get<Long>("listId")
 
     private val createNewList =
-        savedStateHandle.getLiveData<Boolean>("createNewList", false)
+        savedStateHandle.get<Boolean>("createNewList")
 
     init {
         Timber.i("AppListViewModel created")
         setUserAppList()
     }
 
-    private val _userAppCardList = MutableLiveData<MutableList<AppCard>>()
-    val userAppCardList: LiveData<MutableList<AppCard>>
-        get() = _userAppCardList
+    private val _userAppCards = MutableLiveData<MutableList<AppCard>>()
+    val userAppCards: LiveData<MutableList<AppCard>>
+        get() = _userAppCards
 
     val userReviewList: List<MutableLiveData<String>> = List(MAX_NUMBER_OF_APPS){
         savedStateHandle.getLiveData<String>("REVIEW_OF_ORIGINAL_INDEX$it",
             "" )}
 
     private val _listOfAppName: LiveData<MutableList<String>> =
-        Transformations.map(userAppCardList) {
+        Transformations.map(userAppCards) {
             MutableList(it.size) { index ->
                 it[index].packageName
             }
@@ -81,18 +80,21 @@ class AppListViewModel @Inject constructor(
 
     private fun setUserAppList() {
         appListScope.launch {
-            if (createNewList.value!!) {
+            if (createNewList != false) {
                 appListRepository.createNewList()
-                createNewList.postValue(false)
+                val appCardList = appListRepository.getLatestAppCardList()
+                val appCards = getAppCardsFromDatabase(appCardList!!.id)
+                _userAppCards.value = appCards
+            }else {
+                val listId: Long = listId ?:0L
+                val appCards = getAppCardsFromDatabase(listId)
+                _userAppCards.value = appCards
             }
-            val appCardList = getAppCardsFromDatabase()
-            _userAppCardList.postValue(appCardList)
         }
     }
 
-    private suspend fun getAppCardsFromDatabase(): MutableList<AppCard> {
+    private suspend fun getAppCardsFromDatabase(listId: Long): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
-            val listId: Long = listId ?:0L
             val appCards = appListRepository.getList(listId).sortedBy { it.index }.toMutableList()
             appCards
         }
@@ -103,23 +105,23 @@ class AppListViewModel @Inject constructor(
             val listAddAppCards: MutableList<AppCard> = MutableList(packageNameList.size) { index ->
                 AppCard(
                     id = 0,
-                    listId = _userAppCardList.value!!.last().listId,
-                    originalIndex = userAppCardList.value!!.size + index,
-                    index = _userAppCardList.value!!.last().index + index + 1,
+                    listId = _userAppCards.value!!.last().listId,
+                    originalIndex = userAppCards.value!!.size + index,
+                    index = _userAppCards.value!!.last().index + index + 1,
                     packageName = packageNameList[index]
                 )
             }
             for (appCard in listAddAppCards) {
                 appListRepository.add(appCard)
             }
-            userAppCardListStore = _userAppCardList.value!!
+            userAppCardListStore = _userAppCards.value!!
             userAppCardListStore.plusAssign(listAddAppCards)
-            _userAppCardList.postValue(userAppCardListStore)
+            _userAppCards.postValue(userAppCardListStore)
         }
     }
 
     private suspend fun saveAppCards() {
-        for ((index, appCard) in _userAppCardList.value!!.withIndex()) {
+        for ((index, appCard) in _userAppCards.value!!.withIndex()) {
             appCard.index = index
             appCard.review = userReviewList[appCard.originalIndex].value!!
             appListRepository.save(appCard)
@@ -128,9 +130,9 @@ class AppListViewModel @Inject constructor(
 
     fun uploadUserAppList() {
         appListScope.launch {
-            if (_userAppCardList.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
+            if (_userAppCards.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
                 saveAppCards()
-                appListRepository.shareList(_userAppCardList.value!!)
+                appListRepository.shareList(_userAppCards.value!!)
             }
         }
     }
@@ -138,19 +140,19 @@ class AppListViewModel @Inject constructor(
     fun removeAppDataFromList(index: Int, appCardId: Long) {
         appListScope.launch {
             appListRepository.deleteAppCard(appCardId)
-            userAppCardListStore = _userAppCardList.value!!
+            userAppCardListStore = _userAppCards.value!!
             userAppCardListStore.removeAt(index)
-            for (i in index until _userAppCardList.value!!.size) {
+            for (i in index until _userAppCards.value!!.size) {
                 userAppCardListStore[i].index = i
             }
-            _userAppCardList.value = userAppCardListStore
+            _userAppCards.value = userAppCardListStore
         }
     }
 
     fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         appListScope.launch {
             withContext(Dispatchers.IO) {
-                userAppCardListStore = _userAppCardList.value!!
+                userAppCardListStore = _userAppCards.value!!
                 userAppCardListStore[indexOfFrom].index = indexOfTo
                 if (indexOfFrom < indexOfTo) {
                     for (i in indexOfFrom until indexOfTo) {
@@ -162,7 +164,7 @@ class AppListViewModel @Inject constructor(
                     }
                 }
                 userAppCardListStore.sortBy { it.index }
-                _userAppCardList.postValue(userAppCardListStore)
+                _userAppCards.postValue(userAppCardListStore)
             }
         }
     }

@@ -33,6 +33,8 @@
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/app_image_list"
+                    android:clickable="true"
+                    android:focusable="true"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"

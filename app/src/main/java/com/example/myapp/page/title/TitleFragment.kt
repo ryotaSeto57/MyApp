@@ -31,7 +31,7 @@ class TitleFragment : Fragment() {
             titleCardList.adapter = adapter
 
             createNewListButton.setOnClickListener { view: View ->
-                val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment()
+                val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(createNewList =true)
                 view.findNavController().navigate(action)
             }
 
