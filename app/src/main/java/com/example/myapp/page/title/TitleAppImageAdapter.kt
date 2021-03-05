@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.TitleItemAppImageBinding
 
-class AppImageListAdapter(
+class TitleAppImageAdapter(
     private val titleViewModel: TitleViewModel
 ) : ListAdapter<AppCard, RecyclerView.ViewHolder>(AppCardDiffCallback()) {
 

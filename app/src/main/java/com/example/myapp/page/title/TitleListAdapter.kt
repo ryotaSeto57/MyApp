@@ -58,7 +58,7 @@ class TitleListAdapter(
             binding.run {
                 appCardList = item
                 appImageList.apply {
-                    adapter = AppImageListAdapter(titleViewModel).apply {
+                    adapter = TitleAppImageAdapter(titleViewModel).apply {
                         submitAppCardList(item.id)
                     }
                     layoutManager = LinearLayoutManager(context, HORIZONTAL, false)
