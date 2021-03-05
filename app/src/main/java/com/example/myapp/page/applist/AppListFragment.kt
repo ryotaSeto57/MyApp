@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +23,8 @@ import timber.log.Timber
 @AndroidEntryPoint
 class AppListFragment : Fragment() {
     private lateinit var binding: FragmentAppListBinding
-    private val viewModel: AppListViewModel by activityViewModels()
+    private val viewModel: AppListViewModel
+            by navGraphViewModels(R.id.app_navigation) { defaultViewModelProviderFactory }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -73,7 +75,7 @@ class AppListFragment : Fragment() {
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder
         ): Int {
-            return when(viewHolder) {
+            return when (viewHolder) {
                 is AppListAdapter.ViewHolder -> makeMovementFlags(UP or DOWN, LEFT)
                 else -> ACTION_STATE_IDLE
             }
@@ -84,7 +86,7 @@ class AppListFragment : Fragment() {
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            return when(target) {
+            return when (target) {
                 is AppListAdapter.ViewHolder -> {
                     val fromPosition = viewHolder.adapterPosition
                     val toPosition = target.adapterPosition

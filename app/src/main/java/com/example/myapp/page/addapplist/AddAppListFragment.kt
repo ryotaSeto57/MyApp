@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
+import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAddAppListBinding
@@ -16,14 +17,15 @@ import com.example.myapp.page.applist.AppListViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class AddAppListFragment:Fragment() {
+class AddAppListFragment : Fragment() {
     private lateinit var binding: FragmentAddAppListBinding
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val viewModel: AppListViewModel by activityViewModels()
+        val viewModel: AppListViewModel
+                by navGraphViewModels(R.id.app_navigation) { defaultViewModelProviderFactory }
         val adapter = AddAppListAdapter(viewModel)
         binding = DataBindingUtil.inflate<FragmentAddAppListBinding>(
             inflater,
@@ -35,11 +37,11 @@ class AddAppListFragment:Fragment() {
             appListViewModel = viewModel
             addAppList.adapter = adapter
             addAppList.layoutManager = GridLayoutManager(
-                context,5,GridLayoutManager.VERTICAL,false
+                context, 5, GridLayoutManager.VERTICAL, false
             ).apply {
-                spanSizeLookup = object :GridLayoutManager.SpanSizeLookup(){
+                spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
                     override fun getSpanSize(position: Int): Int {
-                        if(adapter.getItemViewType(position) == ITEM_VIEW_TYPE_ADD_BUTTON){
+                        if (adapter.getItemViewType(position) == ITEM_VIEW_TYPE_ADD_BUTTON) {
                             return 5
                         }
                         return 1
@@ -48,7 +50,7 @@ class AddAppListFragment:Fragment() {
                 }
             }
         }
-        viewModel.addAppNameList.observe(viewLifecycleOwner, Observer{
+        viewModel.addAppNameList.observe(viewLifecycleOwner, Observer {
             it?.let {
                 adapter.submitAddAppList(it)
             }
