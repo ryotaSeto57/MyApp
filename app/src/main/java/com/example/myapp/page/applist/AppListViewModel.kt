@@ -76,6 +76,7 @@ class AppListViewModel @Inject constructor(
 
     private var userAppCardListStore: MutableList<AppCard> = mutableListOf()
     private var addUserAppNameListStore: MutableList<String> = mutableListOf()
+    private var deleteAppCardId: MutableList<Long> = mutableListOf()
 
 
     private fun setUserAppList() {
@@ -127,11 +128,17 @@ class AppListViewModel @Inject constructor(
             appListRepository.save(appCard)
         }
     }
+    private suspend fun deleteAppCards(){
+        for (id in deleteAppCardId){
+            appListRepository.deleteAppCard(id)
+        }
+    }
 
     fun uploadUserAppList() {
         appListScope.launch {
             if (_userAppCards.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
                 saveAppCards()
+                deleteAppCards()
                 appListRepository.shareList(_userAppCards.value!!)
             }
         }
@@ -139,7 +146,7 @@ class AppListViewModel @Inject constructor(
 
     fun removeAppDataFromList(index: Int, appCardId: Long) {
         appListScope.launch {
-            appListRepository.deleteAppCard(appCardId)
+            deleteAppCardId.add(appCardId)
             userAppCardListStore = _userAppCards.value!!
             userAppCardListStore.removeAt(index)
             for (i in index until _userAppCards.value!!.size) {
