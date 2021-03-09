@@ -1,6 +1,7 @@
 package com.example.myapp.repository
 
 import android.content.pm.ApplicationInfo
+import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppCardList
 
@@ -22,8 +23,7 @@ interface Repository {
 
     suspend fun getAppCardLists():MutableList<AppCardList>
 
-    suspend fun getAllAppCards():MutableList<AppCard>
-
+    suspend fun getAllAppCards(): LiveData<MutableList<AppCard>>
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
 }

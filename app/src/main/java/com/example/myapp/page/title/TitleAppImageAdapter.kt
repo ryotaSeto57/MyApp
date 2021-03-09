@@ -3,6 +3,7 @@ package com.example.myapp.page.title
 import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -11,14 +12,15 @@ import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.TitleItemAppImageBinding
 
 class TitleAppImageAdapter(
-    private val titleViewModel: TitleViewModel
+    private val titleViewModel: TitleViewModel,
+    private val viewLifecycleOwner: LifecycleOwner
 ) : ListAdapter<AppCard, RecyclerView.ViewHolder>(AppCardDiffCallback()) {
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is ViewHolder -> {
                 val item = getItem(position) as AppCard
-                return holder.bind(item)
+                return holder.bind(item,viewLifecycleOwner)
             }
         }
     }
@@ -27,16 +29,11 @@ class TitleAppImageAdapter(
         return ViewHolder.from(parent)
     }
 
-    fun submitAppCardList(listId: Long) {
-        val list = titleViewModel.getAppCards(listId)
-        submitList(list)
-    }
-
     class ViewHolder private constructor(
         private val binding: TitleItemAppImageBinding,
         private val pm: PackageManager
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: AppCard) {
+        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner) {
             binding.run {
                 appCard = item
                 val appInfo = pm.getApplicationInfo(
@@ -51,6 +48,7 @@ class TitleAppImageAdapter(
                         view.findNavController().navigate(action)
                     }
                 }
+                lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()
             }
         }

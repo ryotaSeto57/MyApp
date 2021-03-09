@@ -1,5 +1,6 @@
 package com.example.myapp.database
 
+import androidx.lifecycle.LiveData
 import androidx.room.*
 
 
@@ -32,5 +33,5 @@ interface AppDatabaseDao {
     fun getAppCardLists(): MutableList<AppCardList>
 
     @Query("SELECT * FROM app_card_table ")
-    fun getAllAppCards(): MutableList<AppCard>
+    fun getAllAppCards(): LiveData<MutableList<AppCard>>
 }

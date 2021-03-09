@@ -58,13 +58,19 @@ class TitleListAdapter(
             binding.run {
                 appCardList = item
                 appImageList.apply {
-                    adapter = TitleAppImageAdapter(titleViewModel).apply {
-                        submitAppCardList(item.id)
+                    adapter = TitleAppImageAdapter(titleViewModel, viewLifecycleOwner).apply {
+                        titleViewModel.userPastAppCards.observe(viewLifecycleOwner, { nullableList ->
+                            nullableList?.let { list ->
+                                submitList(list.filter { it.listId ==item.id }.sortedBy { it.index })
+                            }
+                        })
                     }
                     layoutManager = LinearLayoutManager(context, HORIZONTAL, false)
                 }
+
                 titleListContainer.setOnClickListener { view ->
-                    val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id)
+                    val action =
+                        TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id)
                     view.findNavController().navigate(action)
                 }
 
@@ -83,7 +89,6 @@ class TitleListAdapter(
             }
         }
     }
-
 }
 
 private class TitleDataDiffCallback : DiffUtil.ItemCallback<TitleDataItem>() {

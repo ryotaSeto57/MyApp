@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.AppCardList
@@ -48,7 +49,7 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getAllAppCards(): MutableList<AppCard> {
+    override suspend fun getAllAppCards(): LiveData<MutableList<AppCard>> {
         return withContext(Dispatchers.IO){
             return@withContext database.getAllAppCards()
         }

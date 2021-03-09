@@ -1,9 +1,6 @@
 package com.example.myapp.page.title
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppCardList
 import com.example.myapp.repository.AppListRepository
@@ -23,7 +20,7 @@ class TitleViewModel @Inject constructor(
 
     init {
         getPastAppCardLists()
-        getPastAppCards()
+
         Timber.i("TitleViewModel is created.")
     }
 
@@ -31,8 +28,10 @@ class TitleViewModel @Inject constructor(
     val userPastAppCardLists: LiveData<MutableList<AppCardList>>
         get() = _userPastAppCardLists
 
-    private val _userPastAppCards = MutableLiveData<MutableList<AppCard>>()
-
+    val userPastAppCards:LiveData<MutableList<AppCard>> = liveData {
+        val allAppCards = appListRepository.getAllAppCards()
+        emitSource(allAppCards)
+    }
 
 
     private fun getPastAppCardLists(){
@@ -40,17 +39,6 @@ class TitleViewModel @Inject constructor(
            val appCardLists =  appListRepository.getAppCardLists()
             _userPastAppCardLists.value = appCardLists
         }
-    }
-
-    private fun getPastAppCards(){
-        titleScope.launch {
-            val appCards = appListRepository.getAllAppCards()
-            _userPastAppCards.value = appCards
-        }
-    }
-
-    fun getAppCards(listId: Long): List<AppCard>{
-        return _userPastAppCards.value!!.filter { it.listId == listId }.sortedBy { it.index }
     }
 
 }
