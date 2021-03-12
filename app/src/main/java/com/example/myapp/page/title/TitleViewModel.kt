@@ -20,7 +20,6 @@ class TitleViewModel @Inject constructor(
 
     init {
         getPastAppCardLists()
-
         Timber.i("TitleViewModel is created.")
     }
 

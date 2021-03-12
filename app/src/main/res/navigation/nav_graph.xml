@@ -22,7 +22,7 @@
         <argument
             android:name="createNewList"
             app:argType="boolean"
-            android:defaultValue="false" />
+            android:defaultValue="true" />
         <fragment
             android:id="@+id/appListFragment"
             android:name="com.example.myapp.page.applist.AppListFragment"

@@ -70,7 +70,7 @@ class TitleListAdapter(
 
                 titleListContainer.setOnClickListener { view ->
                     val action =
-                        TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id)
+                        TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id,false)
                     view.findNavController().navigate(action)
                 }
 
