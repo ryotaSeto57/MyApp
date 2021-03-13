@@ -16,28 +16,18 @@ class TitleViewModel @Inject constructor(
     private val appListRepository: AppListRepository
 ):ViewModel() {
 
-    private val titleScope = viewModelScope
-
     init {
-        getPastAppCardLists()
         Timber.i("TitleViewModel is created.")
     }
 
-    private val _userPastAppCardLists = MutableLiveData<MutableList<AppCardList>>()
-    val userPastAppCardLists: LiveData<MutableList<AppCardList>>
-        get() = _userPastAppCardLists
+    val userPastAppCardLists: LiveData<MutableList<AppCardList>> = liveData {
+        val appAppCardLists = appListRepository.getAppCardLists()
+        emitSource(appAppCardLists)
+    }
 
     val userPastAppCards:LiveData<MutableList<AppCard>> = liveData {
         val allAppCards = appListRepository.getAllAppCards()
         emitSource(allAppCards)
-    }
-
-
-    private fun getPastAppCardLists(){
-        titleScope.launch {
-           val appCardLists =  appListRepository.getAppCardLists()
-            _userPastAppCardLists.value = appCardLists
-        }
     }
 
 }

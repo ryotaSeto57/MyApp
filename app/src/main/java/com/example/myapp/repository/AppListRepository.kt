@@ -74,7 +74,7 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getAppCardLists(): MutableList<AppCardList> {
+    override suspend fun getAppCardLists(): LiveData<MutableList<AppCardList>> {
         return withContext(Dispatchers.IO){
             return@withContext database.getAppCardLists()
         }

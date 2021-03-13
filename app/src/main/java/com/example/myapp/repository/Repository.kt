@@ -21,7 +21,7 @@ interface Repository {
 
     suspend fun getLatestAppCardList():AppCardList?
 
-    suspend fun getAppCardLists():MutableList<AppCardList>
+    suspend fun getAppCardLists():LiveData<MutableList<AppCardList>>
 
     suspend fun getAllAppCards(): LiveData<MutableList<AppCard>>
 
