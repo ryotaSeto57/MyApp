@@ -1,9 +1,13 @@
 package com.example.myapp.page.applist
 
+import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -18,10 +22,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.Exception
 
-private const val  ITEM_VIEW_TYPE_ITEM = 0
-private const val  ITEM_VIEW_TYPE_BUTTON = 1
-private  const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
+private const val ITEM_VIEW_TYPE_ITEM = 0
+private const val ITEM_VIEW_TYPE_BUTTON = 1
+private const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
+private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
 
 class AppListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
@@ -31,7 +37,7 @@ class AppListAdapter(
     private val adapterScope = CoroutineScope(Dispatchers.Default)
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when(holder) {
+        when (holder) {
             is ViewHolder -> {
                 val item = getItem(position) as DataItem.AppCardItem
                 holder.bind(item.appCard, viewLifecycleOwner, viewModel)
@@ -46,7 +52,7 @@ class AppListAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return when (viewType){
+        return when (viewType) {
             ITEM_VIEW_TYPE_ITEM -> ViewHolder.from(parent)
             ITEM_VIEW_TYPE_BUTTON -> ButtonHolder.from(parent)
             ITEM_VIEW_TYPE_SHARE_BUTTON -> ShareButtonHolder.from(parent)
@@ -55,14 +61,14 @@ class AppListAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return when (getItem(position)){
+        return when (getItem(position)) {
             is DataItem.AppCardItem -> ITEM_VIEW_TYPE_ITEM
             is DataItem.AddAppButton -> ITEM_VIEW_TYPE_BUTTON
             is DataItem.ShareButton -> ITEM_VIEW_TYPE_SHARE_BUTTON
         }
     }
 
-    fun submitReviewList(list: MutableList<AppCard>?){
+    fun submitReviewList(list: MutableList<AppCard>?) {
         adapterScope.launch {
             val items = when (list) {
                 null -> listOf(DataItem.AddAppButton)
@@ -76,21 +82,23 @@ class AppListAdapter(
     }
 
     class ButtonHolder private constructor(
-        private val binding :AddAppButtonBinding
-        ): RecyclerView.ViewHolder(binding.root){
-        fun bind(viewLifecycleOwner: LifecycleOwner,viewModel: AppListViewModel){
+        private val binding: AddAppButtonBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel) {
             binding.run {
                 appListViewModel = viewModel
                 lifecycleOwner = viewLifecycleOwner
                 addAppCardButton.setOnClickListener { button ->
                     viewModel.saveButtonPosition(adapterPosition)
-                    button.findNavController().navigate(R.id.action_appListFragment_to_addAppListFragment)
+                    button.findNavController()
+                        .navigate(R.id.action_appListFragment_to_addAppListFragment)
                 }
                 executePendingBindings()
             }
         }
-        companion object{
-            fun from(parent: ViewGroup): ButtonHolder{
+
+        companion object {
+            fun from(parent: ViewGroup): ButtonHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = AddAppButtonBinding.inflate(layoutInflater, parent, false)
                 return ButtonHolder(binding)
@@ -99,16 +107,16 @@ class AppListAdapter(
     }
 
     class ShareButtonHolder private constructor(
-        private val binding : ShareButtonBinding
-    ): RecyclerView.ViewHolder(binding.root){
-        fun bind(viewModel: AppListViewModel){
+        private val binding: ShareButtonBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(viewModel: AppListViewModel) {
             binding.run {
                 this.appListViewModel = viewModel
             }
         }
 
-        companion object{
-            fun from(parent: ViewGroup): ShareButtonHolder{
+        companion object {
+            fun from(parent: ViewGroup): ShareButtonHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = ShareButtonBinding.inflate(layoutInflater, parent, false)
                 return ShareButtonHolder(binding)
@@ -116,35 +124,49 @@ class AppListAdapter(
         }
     }
 
-    class ViewHolder private constructor(val binding: ListItemAppBinding,
-                                         private val pm: PackageManager)
-        : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel){
+    class ViewHolder private constructor(
+        val binding: ListItemAppBinding,
+        private val pm: PackageManager
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner, viewModel: AppListViewModel) {
             binding.run {
                 lifecycleOwner = viewLifecycleOwner
                 appCard = item
                 this.appListViewModel = viewModel
-                val appInfo = pm.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES)
-                appImage.setImageDrawable(appInfo.loadIcon(pm))
-                appName.text = appInfo.loadLabel(pm).toString()
+                val appInfo: ApplicationInfo? =
+                    try {
+                        pm.getApplicationInfo(item.packageName, MATCH_UNINSTALLED_PACKAGES)
+                    } catch (e: Exception) {
+                        null
+                    }
+                appImage.apply {
+                    setImageDrawable(
+                        appInfo?.loadIcon(pm) ?: ResourcesCompat.getDrawable(
+                            context.resources,
+                            R.mipmap.ic_launcher,
+                            null
+                        )
+                    )
+                }
+                appName.text = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
                 textAppCardId.text = item.id.toString()
                 textAppCardIndex.text = item.index.toString()
                 executePendingBindings()
             }
         }
 
-        companion object{
-            fun from(parent: ViewGroup) : ViewHolder{
+        companion object {
+            fun from(parent: ViewGroup): ViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = ListItemAppBinding.inflate(layoutInflater, parent, false)
                 val pm = parent.context.packageManager
-                return ViewHolder(binding,pm)
+                return ViewHolder(binding, pm)
             }
         }
     }
 }
 
-class AppDataDiffCallback : DiffUtil.ItemCallback<DataItem>(){
+class AppDataDiffCallback : DiffUtil.ItemCallback<DataItem>() {
     override fun areItemsTheSame(oldItem: DataItem, newItem: DataItem): Boolean {
         return oldItem.id == newItem.id
     }
@@ -154,18 +176,18 @@ class AppDataDiffCallback : DiffUtil.ItemCallback<DataItem>(){
     }
 }
 
-sealed class DataItem{
-    data class AppCardItem(val appCard: AppCard):DataItem() {
+sealed class DataItem {
+    data class AppCardItem(val appCard: AppCard) : DataItem() {
         override val id = appCard.id
     }
 
-    object AddAppButton:DataItem(){
-        override val id = Long.MAX_VALUE -1
+    object AddAppButton : DataItem() {
+        override val id = Long.MAX_VALUE - 1
     }
 
-    object ShareButton:DataItem() {
+    object ShareButton : DataItem() {
         override val id = Long.MAX_VALUE
     }
 
-    abstract val id:Long
+    abstract val id: Long
 }

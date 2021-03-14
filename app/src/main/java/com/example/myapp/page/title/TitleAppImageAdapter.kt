@@ -3,11 +3,13 @@ package com.example.myapp.page.title
 import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapp.R
 import com.example.myapp.database.AppCard
 import com.example.myapp.databinding.TitleItemAppImageBinding
 
@@ -20,7 +22,7 @@ class TitleAppImageAdapter(
         when (holder) {
             is ViewHolder -> {
                 val item = getItem(position) as AppCard
-                return holder.bind(item,viewLifecycleOwner)
+                return holder.bind(item, viewLifecycleOwner)
             }
         }
     }
@@ -36,15 +38,22 @@ class TitleAppImageAdapter(
         fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner) {
             binding.run {
                 appCard = item
-                val appInfo = pm.getApplicationInfo(
-                    item.packageName,
-                    PackageManager.MATCH_UNINSTALLED_PACKAGES
-                )
+                val appInfo = try {
+                    pm.getApplicationInfo(
+                        item.packageName,
+                        PackageManager.MATCH_UNINSTALLED_PACKAGES
+                    )
+                } catch (e: Exception) {
+                    null
+                }
                 appImage.apply {
-                    setImageDrawable(appInfo.loadIcon(pm))
+                    setImageDrawable(appInfo?.loadIcon(pm) ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))
                     setOnClickListener { view ->
                         val action =
-                            TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.listId)
+                            TitleFragmentDirections.actionTitleFragmentToAppListFragment(
+                                item.listId,
+                                false
+                            )
                         view.findNavController().navigate(action)
                     }
                 }
