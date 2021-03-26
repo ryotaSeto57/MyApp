@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
+import com.leinardi.android.speeddial.SpeedDialActionItem
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -51,6 +52,8 @@ class AppListFragment : Fragment() {
             }
             appListViewModel = viewModel
             itemTouchHelper.attachToRecyclerView(appList)
+            speedDial.addActionItem(SpeedDialActionItem.Builder(R.id.fab_action1,R.drawable.ic_baseline_save_18).create())
+            speedDial.addActionItem(SpeedDialActionItem.Builder(R.id.fab_action2,R.drawable.ic_baseline_share_24).create())
         }
 
         viewModel.userAppCards.observe(viewLifecycleOwner, Observer {

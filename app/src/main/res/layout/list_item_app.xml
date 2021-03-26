@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
-
         <variable
             name="appCard"
             type="com.example.myapp.database.AppCard" />
@@ -103,13 +102,13 @@
                     android:id="@+id/imageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="#FFFFFF"
+                    android:background="@drawable/add_button_shape"
                     android:onClick="@{()-> appListViewModel.changeEditability(appCard)}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintVertical_bias="0.2"
-                    android:src="@{appCard.editable? @android:drawable/arrow_up_float :@android:drawable/ic_menu_edit}"
+                    android:src="@{appCard.editable? @drawable/ic_baseline_arrow_drop_up_36 :@drawable/ic_baseline_create_24}"
                     />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>

@@ -107,4 +107,7 @@ dependencies {
 
     //card view
     implementation "androidx.cardview:cardview:1.0.0"
+
+    //speed dial floating action button
+    implementation "com.leinardi.android:speed-dial:3.1.1"
 }
