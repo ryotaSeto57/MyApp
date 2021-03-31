@@ -26,6 +26,9 @@ class AppListViewModel @Inject constructor(
     private val createNewList =
         savedStateHandle.get<Boolean>("createNewList")
 
+    private val underEdit =
+        savedStateHandle.getLiveData<Boolean>("underEdit",false)
+
     init {
         Timber.i("AppListViewModel created")
         setUserAppList()
@@ -37,7 +40,7 @@ class AppListViewModel @Inject constructor(
 
     val userReviewList: List<MutableLiveData<String>> = List(MAX_NUMBER_OF_APPS){
         savedStateHandle.getLiveData<String>("REVIEW_OF_ORIGINAL_INDEX$it",
-            "" )}
+            "")}
 
     private val _listOfAppName: LiveData<MutableList<String>> =
         Transformations.map(userAppCards) {
@@ -85,6 +88,7 @@ class AppListViewModel @Inject constructor(
                 appListRepository.createNewList()
                 val appCardList = appListRepository.getLatestAppCardList()
                 val appCards = getAppCardsFromDatabase(appCardList!!.id)
+                savedStateHandle.set("listId", appCardList.id)
                 _userAppCards.value = appCards
             }else {
                 val listId: Long = listId ?:0L
@@ -122,9 +126,10 @@ class AppListViewModel @Inject constructor(
     }
 
     private suspend fun saveAppCards() {
-        for ((index, appCard) in _userAppCards.value!!.withIndex()) {
-            appCard.index = index
-            appCard.review = userReviewList[appCard.originalIndex].value!!
+        for (index in _userAppCards.value!!.indices) {
+            val appCard = _userAppCards.value!![index]
+            _userAppCards.value!![index].index = index
+            _userAppCards.value!![index].review = userReviewList[appCard.originalIndex].value!!
             appListRepository.save(appCard)
         }
     }
@@ -134,14 +139,10 @@ class AppListViewModel @Inject constructor(
         }
     }
 
-    fun uploadUserAppList() {
-        appListScope.launch {
+    private suspend fun uploadUserAppList() {
             if (_userAppCards.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
-                saveAppCards()
-                deleteAppCards()
                 appListRepository.shareList(_userAppCards.value!!)
             }
-        }
     }
 
     fun removeAppDataFromList(index: Int, appCardId: Long) {
@@ -193,4 +194,16 @@ class AppListViewModel @Inject constructor(
         appCard.editable.value = !appCard.editable.value!!
     }
 
+    fun saveAction(){
+        appListScope.launch {
+            saveAppCards()
+            deleteAppCards()
+        }
+    }
+
+    fun shareAction(){
+        appListScope.launch {
+            uploadUserAppList()
+        }
+    }
 }

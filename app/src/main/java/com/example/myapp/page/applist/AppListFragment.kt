@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
 import com.leinardi.android.speeddial.SpeedDialActionItem
+import com.leinardi.android.speeddial.SpeedDialView
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
@@ -52,8 +53,29 @@ class AppListFragment : Fragment() {
             }
             appListViewModel = viewModel
             itemTouchHelper.attachToRecyclerView(appList)
-            speedDial.addActionItem(SpeedDialActionItem.Builder(R.id.fab_action1,R.drawable.ic_baseline_save_18).create())
-            speedDial.addActionItem(SpeedDialActionItem.Builder(R.id.fab_action2,R.drawable.ic_baseline_share_24).create())
+            speedDial.apply{
+                addActionItem(SpeedDialActionItem.Builder(
+                    R.id.save_action,R.drawable.ic_baseline_save_18).create()
+                )
+                addActionItem(SpeedDialActionItem.Builder(
+                    R.id.share_action,R.drawable.ic_baseline_share_24).create()
+                )
+                setOnActionSelectedListener(SpeedDialView.OnActionSelectedListener { actionItem ->
+                    when (actionItem.id) {
+                        R.id.save_action -> {
+                            viewModel.saveAction()
+                            close()
+                            return@OnActionSelectedListener true
+                        }
+                        R.id.share_action -> {
+                            viewModel.shareAction()
+                            close()
+                            return@OnActionSelectedListener true
+                        }
+                    }
+                    false
+                })
+            }
         }
 
         viewModel.userAppCards.observe(viewLifecycleOwner, Observer {

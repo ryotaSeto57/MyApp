@@ -21,6 +21,7 @@ import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
+private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
 class AppListRepository @Inject constructor(
     private val database: AppDatabaseDao,@ApplicationContext appContext: Context
 ) : Repository {
@@ -116,7 +117,11 @@ class AppListRepository @Inject constructor(
                     try {
                         storageRef.child("images/${appUid}").downloadUrl.await()
                     } catch (e: StorageException) {
-                        val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
+                        val appInfo: ApplicationInfo = try {
+                            pm.getApplicationInfo(appCard.packageName, 0)
+                        }catch (e:Exception){
+                           return@runCatching
+                        }
                         appIcon = appInfo.loadIcon(pm)
                         val bitmap = (appIcon as BitmapDrawable).bitmap
                         val baos = ByteArrayOutputStream()
@@ -132,11 +137,16 @@ class AppListRepository @Inject constructor(
             }
             val userAppCards: MutableMap<String, Any> = mutableMapOf()
             for ((index, appCard) in listOfAppCards.withIndex()) {
-                val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
+                val appInfo: ApplicationInfo? = try {
+                    pm.getApplicationInfo(appCard.packageName, 0)
+                }catch (e:Exception){
+                    null
+                }
+                val appName = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
                 val app: MutableMap<String, String> = mutableMapOf(
                     "appUid" to appCard.packageName,
                     "appReview" to appCard.review,
-                    "appName" to appInfo.loadLabel(pm).toString(),
+                    "appName" to appName,
                     "URL" to appCard.downloadUrl
                 )
                 userAppCards[index.toString()] = app
