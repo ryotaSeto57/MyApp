@@ -13,11 +13,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TitleViewModel @Inject constructor(
-    private val appListRepository: AppListRepository
+    private val appListRepository: AppListRepository,
+    private val savedStateHandle: SavedStateHandle
 ):ViewModel() {
 
     init {
         Timber.i("TitleViewModel is created.")
+        Timber.i(savedStateHandle.keys().joinToString())
     }
 
     val userPastAppCardLists: LiveData<MutableList<AppCardList>> = liveData {
@@ -29,5 +31,6 @@ class TitleViewModel @Inject constructor(
         val allAppCards = appListRepository.getAllAppCards()
         emitSource(allAppCards)
     }
+
 
 }

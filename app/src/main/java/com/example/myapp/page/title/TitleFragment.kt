@@ -12,6 +12,7 @@ import com.example.myapp.R
 import com.example.myapp.databinding.FragmentTitleBinding
 import com.example.myapp.repository.AppListRepository
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -22,11 +23,12 @@ class TitleFragment : Fragment() {
     @Inject
     lateinit var appListRepository: AppListRepository
 
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        Timber.i("Title fragment is created.")
+        Timber.i(savedInstanceState?.keySet()?.joinToString() ?:"")
 
         val adapter = TitleListAdapter(viewLifecycleOwner,viewModel)
 
@@ -37,7 +39,7 @@ class TitleFragment : Fragment() {
             titleCardList.adapter = adapter
 
             createNewListButton.setOnClickListener { view: View ->
-                val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(createNewList =true)
+                val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(createNewList =true,underEdit=false)
                 view.findNavController().navigate(action)
             }
 

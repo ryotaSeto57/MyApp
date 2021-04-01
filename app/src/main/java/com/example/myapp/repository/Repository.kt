@@ -7,7 +7,7 @@ import com.example.myapp.database.AppCardList
 
 interface Repository {
 
-    suspend fun getList(key: Long): MutableList<AppCard>
+    suspend fun getCardList(key: Long): MutableList<AppCard>
 
     suspend fun createNewList()
 
@@ -26,4 +26,12 @@ interface Repository {
     suspend fun getAllAppCards(): LiveData<MutableList<AppCard>>
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
+
+    suspend fun plusNumberOfAppsInTotal(listId: Long, numberOfAddedApps: Int)
+
+    suspend fun getNumberOfPastAppCardsInTotal(listId: Long):Int
+
+    suspend fun getAppCard(listId: Long,originalIndex: Int): AppCard?
+
+    suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard>
 }

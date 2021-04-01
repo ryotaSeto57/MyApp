@@ -23,6 +23,10 @@
             android:name="createNewList"
             app:argType="boolean"
             android:defaultValue="true" />
+        <argument
+            android:name="underEdit"
+            app:argType="boolean"
+            android:defaultValue="false"/>
         <fragment
             android:id="@+id/appListFragment"
             android:name="com.example.myapp.page.applist.AppListFragment"

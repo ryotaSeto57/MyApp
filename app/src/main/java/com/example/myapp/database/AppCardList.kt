@@ -1,5 +1,6 @@
 package com.example.myapp.database
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -8,5 +9,7 @@ import androidx.room.PrimaryKey
 
 data class AppCardList (
     @PrimaryKey(autoGenerate = true)
-    val id :Long
+    val id :Long,
+    @ColumnInfo(name="number_of_apps_in_total")
+    val numberOfAppsInTotal :Int = 0
 )

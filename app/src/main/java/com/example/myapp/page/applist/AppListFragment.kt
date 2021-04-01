@@ -122,8 +122,8 @@ class AppListFragment : Fragment() {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            val appId = (viewHolder as AppListAdapter.ViewHolder).binding.appCard!!.id
-            viewModel.removeAppDataFromList(viewHolder.adapterPosition, appId)
+            val appCardId = (viewHolder as AppListAdapter.ViewHolder).binding.appCard!!.id
+            viewModel.removeAppDataFromList(viewHolder.adapterPosition, appCardId)
         }
     })
 }

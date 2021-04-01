@@ -20,7 +20,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch {
             Timber.i("Main Activity is created.")
-            Timber.i((savedInstanceState?.get("REVIEW_OF_ORIGINAL_INDEX1") as String?) ?: "")
             if (appListRepository.getLatestAppCardList() == null) {
                 val navController =findNavController(R.id.myNavHostFragment)
                 val navGraph = navController.navInflater.inflate(R.navigation.nav_graph)

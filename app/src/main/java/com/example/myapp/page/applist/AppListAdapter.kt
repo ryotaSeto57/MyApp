@@ -88,6 +88,7 @@ class AppListAdapter(
                 lifecycleOwner = viewLifecycleOwner
                 addAppCardButton.setOnClickListener { button ->
                     viewModel.saveButtonPosition(adapterPosition)
+                    viewModel.alignListIndex()
                     button.findNavController()
                         .navigate(R.id.action_appListFragment_to_addAppListFragment)
                 }
@@ -147,7 +148,7 @@ class AppListAdapter(
                     )
                 }
                 appName.text = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
-                textAppCardId.text = item.id.toString()
+                textAppCardId.text = item.originalIndex.toString()
                 textAppCardIndex.text = item.index.toString()
                 executePendingBindings()
             }

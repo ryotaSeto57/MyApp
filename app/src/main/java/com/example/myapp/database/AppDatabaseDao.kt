@@ -6,8 +6,6 @@ import androidx.room.*
 
 @Dao
 interface AppDatabaseDao {
-
-
     @Insert(onConflict =  OnConflictStrategy.REPLACE)
     fun insert(appCard: AppCard)
 
@@ -34,4 +32,13 @@ interface AppDatabaseDao {
 
     @Query("SELECT * FROM app_card_table ")
     fun getAllAppCards(): LiveData<MutableList<AppCard>>
+
+    @Update
+    fun update(appCardList: AppCardList)
+
+    @Query("SELECT * FROM app_card_list_table WHERE id = :key")
+    fun getAppCardList(key: Long): AppCardList?
+
+    @Query("SELECT * FROM app_card_table WHERE list_id = :listId AND original_index = :originalIndex")
+    fun getAppCard(listId: Long, originalIndex: Int): AppCard?
 }
