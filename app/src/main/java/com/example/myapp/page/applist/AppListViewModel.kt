@@ -229,6 +229,8 @@ class AppListViewModel @Inject constructor(
 
     fun shareAction(){
         appListScope.launch {
+            saveAppCards()
+            deleteAppCards()
             uploadUserAppList()
         }
     }
