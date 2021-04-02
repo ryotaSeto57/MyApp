@@ -132,19 +132,18 @@ class AppListRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             var appIcon: Drawable
             var appUid: String
+            var appInfo :ApplicationInfo
             for (appCard in listOfAppCards) {
                 appUid = appCard.packageName
+                appInfo = try{
+                    pm.getApplicationInfo(appCard.packageName, 0)
+                }catch (e: PackageManager.NameNotFoundException) {
+                    continue
+                }
                 val uri = kotlin.runCatching {
                     try {
                         storageRef.child("images/${appUid}").downloadUrl.await()
                     } catch (e: StorageException) {
-                        val appInfo: ApplicationInfo =
-//                            TODO()
-//                            try {
-                                pm.getApplicationInfo(appCard.packageName, 0)
-//                            } catch (e: PackageManager.NameNotFoundException) {
-//                                return@runCatching null
-//                            }
                         appIcon = appInfo.loadIcon(pm)
                         val bitmap = (appIcon as BitmapDrawable).bitmap
                         val baos = ByteArrayOutputStream()

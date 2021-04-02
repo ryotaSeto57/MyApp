@@ -183,19 +183,21 @@ class AppListViewModel @Inject constructor(
     fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         appListScope.launch {
             withContext(Dispatchers.IO) {
-                userAppCardListStore = _userAppCards.value!!
-                userAppCardListStore[indexOfFrom].index = indexOfTo
-                if (indexOfFrom < indexOfTo) {
-                    for (i in indexOfFrom until indexOfTo) {
-                        userAppCardListStore[i + 1].index -= 1
+                if (indexOfFrom == indexOfTo + 1 || indexOfFrom == indexOfTo - 1) {
+                    userAppCardListStore = _userAppCards.value!!
+                    userAppCardListStore[indexOfFrom].index = userAppCardListStore[indexOfTo].index
+                    if (indexOfFrom < indexOfTo) {
+                        for (i in indexOfFrom until indexOfTo) {
+                            userAppCardListStore[i + 1].index -= 1
+                        }
+                    } else if (indexOfFrom > indexOfTo) {
+                        for (i in indexOfTo until indexOfFrom) {
+                            userAppCardListStore[i].index += 1
+                        }
                     }
-                } else if (indexOfFrom > indexOfTo) {
-                    for (i in indexOfTo until indexOfFrom) {
-                        userAppCardListStore[i].index += 1
-                    }
+                    userAppCardListStore.sortBy { it.index }
+                    _userAppCards.postValue(userAppCardListStore)
                 }
-                userAppCardListStore.sortBy { it.index }
-                _userAppCards.postValue(userAppCardListStore)
             }
         }
     }
