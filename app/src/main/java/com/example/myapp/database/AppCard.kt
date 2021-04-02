@@ -21,6 +21,4 @@ data class AppCard constructor(
     var review : String = ""
     @ColumnInfo(name="download_url")
     var downloadUrl : String = ""
-    @Ignore
-    var editable :MutableLiveData<Boolean> = MutableLiveData(false)
 }

@@ -21,8 +21,10 @@ import timber.log.Timber
 import java.io.ByteArrayOutputStream
 import javax.inject.Inject
 
+private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
+
 class AppListRepository @Inject constructor(
-    private val database: AppDatabaseDao,@ApplicationContext appContext: Context
+    private val database: AppDatabaseDao, @ApplicationContext appContext: Context
 ) : Repository {
 
     private val pm = appContext.packageManager
@@ -31,7 +33,7 @@ class AppListRepository @Inject constructor(
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
 
-    override suspend fun getList(key: Long): MutableList<AppCard> {
+    override suspend fun getCardList(key: Long): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
             return@withContext database.getAppCards(key)
         }
@@ -43,6 +45,26 @@ class AppListRepository @Inject constructor(
         }
     }
 
+    override suspend fun getAppCard(listId: Long,originalIndex:Int): AppCard?{
+        return withContext(Dispatchers.IO){
+            return@withContext database.getAppCard(listId,originalIndex)
+        }
+    }
+
+    override suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard>{
+        return withContext(Dispatchers.IO){
+            val appCardsFromDatabase: MutableList<AppCard> = mutableListOf()
+            for (appCard in appCards){
+                add(appCard)
+                val appCardFromDatabase = getAppCard(appCard.listId,appCard.originalIndex)
+                if (appCardFromDatabase != null) {
+                    appCardsFromDatabase.add(appCardFromDatabase)
+                }
+            }
+            return@withContext appCardsFromDatabase
+        }
+    }
+
     override suspend fun getLatestAppCardList(): AppCardList? {
         return withContext(Dispatchers.IO) {
             return@withContext database.getLatestReviewList()
@@ -50,7 +72,7 @@ class AppListRepository @Inject constructor(
     }
 
     override suspend fun getAllAppCards(): LiveData<MutableList<AppCard>> {
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             return@withContext database.getAllAppCards()
         }
     }
@@ -75,7 +97,7 @@ class AppListRepository @Inject constructor(
     }
 
     override suspend fun getAppCardLists(): LiveData<MutableList<AppCardList>> {
-        return withContext(Dispatchers.IO){
+        return withContext(Dispatchers.IO) {
             return@withContext database.getAppCardLists()
         }
     }
@@ -110,13 +132,18 @@ class AppListRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             var appIcon: Drawable
             var appUid: String
+            var appInfo :ApplicationInfo
             for (appCard in listOfAppCards) {
                 appUid = appCard.packageName
+                appInfo = try{
+                    pm.getApplicationInfo(appCard.packageName, 0)
+                }catch (e: PackageManager.NameNotFoundException) {
+                    continue
+                }
                 val uri = kotlin.runCatching {
                     try {
                         storageRef.child("images/${appUid}").downloadUrl.await()
                     } catch (e: StorageException) {
-                        val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
                         appIcon = appInfo.loadIcon(pm)
                         val bitmap = (appIcon as BitmapDrawable).bitmap
                         val baos = ByteArrayOutputStream()
@@ -128,15 +155,20 @@ class AppListRepository @Inject constructor(
                 }
                 uri.getOrNull()
                     ?.also { appCard.downloadUrl = it.toString() }
-                    ?: Timber.w( "error in uploading $appUid")
+                    ?: Timber.w("error in uploading $appUid")
             }
             val userAppCards: MutableMap<String, Any> = mutableMapOf()
             for ((index, appCard) in listOfAppCards.withIndex()) {
-                val appInfo = pm.getApplicationInfo(appCard.packageName, 0)
+                val appInfo: ApplicationInfo? = try {
+                    pm.getApplicationInfo(appCard.packageName, 0)
+                } catch (e: Exception) {
+                    null
+                }
+                val appName = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
                 val app: MutableMap<String, String> = mutableMapOf(
                     "appUid" to appCard.packageName,
                     "appReview" to appCard.review,
-                    "appName" to appInfo.loadLabel(pm).toString(),
+                    "appName" to appName,
                     "URL" to appCard.downloadUrl
                 )
                 userAppCards[index.toString()] = app
@@ -146,6 +178,25 @@ class AppListRepository @Inject constructor(
             } catch (e: Exception) {
                 Timber.w("Error adding document")
             }
+        }
+    }
+
+    override suspend fun plusNumberOfAppsInTotal(listId: Long, numberOfAddedApps: Int) {
+        withContext(Dispatchers.IO) {
+            val appCardList = database.getAppCardList(listId)
+            database.update(
+                AppCardList(
+                    listId,
+                    (appCardList?.numberOfAppsInTotal ?: 0) + numberOfAddedApps
+                )
+            )
+        }
+    }
+
+    override suspend fun getNumberOfPastAppCardsInTotal(listId: Long):Int {
+        return withContext(Dispatchers.IO) {
+            val appCardList = database.getAppCardList(listId)
+            return@withContext appCardList?.numberOfAppsInTotal ?: 0
         }
     }
 }

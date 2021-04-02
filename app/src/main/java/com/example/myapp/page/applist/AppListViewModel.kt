@@ -26,8 +26,12 @@ class AppListViewModel @Inject constructor(
     private val createNewList =
         savedStateHandle.get<Boolean>("createNewList")
 
+    private val underEdit =
+        savedStateHandle.get<Boolean>("underEdit")
+
     init {
         Timber.i("AppListViewModel created")
+        Timber.i(savedStateHandle.keys().joinToString())
         setUserAppList()
     }
 
@@ -35,9 +39,15 @@ class AppListViewModel @Inject constructor(
     val userAppCards: LiveData<MutableList<AppCard>>
         get() = _userAppCards
 
-    val userReviewList: List<MutableLiveData<String>> = List(MAX_NUMBER_OF_APPS){
-        savedStateHandle.getLiveData<String>("REVIEW_OF_ORIGINAL_INDEX$it",
-            "" )}
+    val userReviewList: List<MutableLiveData<String>> = List(MAX_NUMBER_OF_APPS){ index ->
+        savedStateHandle.getLiveData("REVIEW_OF_ORIGINAL_INDEX$index",
+            "")
+    }
+
+    val reviewEditableList: List<MutableLiveData<Boolean>> = List(MAX_NUMBER_OF_APPS){index ->
+        savedStateHandle.getLiveData("EDITABLE_REVIEW_OF_ORIGINAL_INDEX$index",
+            false)
+    }
 
     private val _listOfAppName: LiveData<MutableList<String>> =
         Transformations.map(userAppCards) {
@@ -78,53 +88,63 @@ class AppListViewModel @Inject constructor(
     private var addUserAppNameListStore: MutableList<String> = mutableListOf()
     private var deleteAppCardId: MutableList<Long> = mutableListOf()
 
-
     private fun setUserAppList() {
         appListScope.launch {
             if (createNewList != false) {
                 appListRepository.createNewList()
                 val appCardList = appListRepository.getLatestAppCardList()
                 val appCards = getAppCardsFromDatabase(appCardList!!.id)
+                savedStateHandle.set("listId", appCardList.id)
                 _userAppCards.value = appCards
+                appListRepository.plusNumberOfAppsInTotal(appCardList.id,appCards.size)
             }else {
                 val listId: Long = listId ?:0L
                 val appCards = getAppCardsFromDatabase(listId)
                 _userAppCards.value = appCards
+                if (underEdit != true) {
+                    for (appCard in appCards) {
+                        savedStateHandle
+                            .set("REVIEW_OF_ORIGINAL_INDEX${appCard.originalIndex}", appCard.review)
+                    }
+                }
+                savedStateHandle.set("underEdit",true)
             }
         }
     }
 
     private suspend fun getAppCardsFromDatabase(listId: Long): MutableList<AppCard> {
         return withContext(Dispatchers.IO) {
-            val appCards = appListRepository.getList(listId).sortedBy { it.index }.toMutableList()
+            val appCards = appListRepository.getCardList(listId).sortedBy { it.index }.toMutableList()
             appCards
         }
     }
 
     private suspend fun createAddAppCards(packageNameList: MutableList<String>) {
         withContext(Dispatchers.IO) {
+            val listId = _userAppCards.value!!.last().listId
+            val numberOfPastAppCardsInTotal = appListRepository.getNumberOfPastAppCardsInTotal(listId)
             val listAddAppCards: MutableList<AppCard> = MutableList(packageNameList.size) { index ->
                 AppCard(
                     id = 0,
-                    listId = _userAppCards.value!!.last().listId,
-                    originalIndex = userAppCards.value!!.size + index,
-                    index = _userAppCards.value!!.last().index + index + 1,
+                    listId = listId,
+                    originalIndex =  numberOfPastAppCardsInTotal + index,
+                    index = _userAppCards.value!!.size + index,
                     packageName = packageNameList[index]
                 )
             }
-            for (appCard in listAddAppCards) {
-                appListRepository.add(appCard)
-            }
+            val addAppCardsFromDatabase =appListRepository.addAppCards(listAddAppCards)
+            appListRepository.plusNumberOfAppsInTotal(listId,packageNameList.size)
             userAppCardListStore = _userAppCards.value!!
-            userAppCardListStore.plusAssign(listAddAppCards)
+            userAppCardListStore.plusAssign(addAppCardsFromDatabase)
+            userAppCardListStore.sortBy { it.index }
             _userAppCards.postValue(userAppCardListStore)
         }
     }
 
     private suspend fun saveAppCards() {
-        for ((index, appCard) in _userAppCards.value!!.withIndex()) {
+        for ((index,appCard) in _userAppCards.value!!.withIndex()) {
             appCard.index = index
-            appCard.review = userReviewList[appCard.originalIndex].value!!
+            appCard.review = userReviewList[appCard.originalIndex].value ?:""
             appListRepository.save(appCard)
         }
     }
@@ -134,44 +154,50 @@ class AppListViewModel @Inject constructor(
         }
     }
 
-    fun uploadUserAppList() {
-        appListScope.launch {
+    private suspend fun uploadUserAppList() {
             if (_userAppCards.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
-                saveAppCards()
-                deleteAppCards()
                 appListRepository.shareList(_userAppCards.value!!)
             }
-        }
     }
 
     fun removeAppDataFromList(index: Int, appCardId: Long) {
         appListScope.launch {
             deleteAppCardId.add(appCardId)
             userAppCardListStore = _userAppCards.value!!
-            userAppCardListStore.removeAt(index)
-            for (i in index until _userAppCards.value!!.size) {
-                userAppCardListStore[i].index = i
+            userAppCardListStore.remove(userAppCardListStore.find { it.id == appCardId })
+            for ((index, appCard)in userAppCardListStore.withIndex()) {
+                appCard.index = index
             }
-            _userAppCards.value = userAppCardListStore
+            _userAppCards.postValue(userAppCardListStore)
+        }
+    }
+
+    fun alignListIndex(){
+        appListScope.launch {
+            for((index,appCard) in _userAppCards.value!!.withIndex()){
+                appCard.index = index
+            }
         }
     }
 
     fun replaceAppData(indexOfFrom: Int, indexOfTo: Int) {
         appListScope.launch {
             withContext(Dispatchers.IO) {
-                userAppCardListStore = _userAppCards.value!!
-                userAppCardListStore[indexOfFrom].index = indexOfTo
-                if (indexOfFrom < indexOfTo) {
-                    for (i in indexOfFrom until indexOfTo) {
-                        userAppCardListStore[i + 1].index -= 1
+                if (indexOfFrom == indexOfTo + 1 || indexOfFrom == indexOfTo - 1) {
+                    userAppCardListStore = _userAppCards.value!!
+                    userAppCardListStore[indexOfFrom].index = userAppCardListStore[indexOfTo].index
+                    if (indexOfFrom < indexOfTo) {
+                        for (i in indexOfFrom until indexOfTo) {
+                            userAppCardListStore[i + 1].index -= 1
+                        }
+                    } else if (indexOfFrom > indexOfTo) {
+                        for (i in indexOfTo until indexOfFrom) {
+                            userAppCardListStore[i].index += 1
+                        }
                     }
-                } else if (indexOfFrom > indexOfTo) {
-                    for (i in indexOfTo until indexOfFrom) {
-                        userAppCardListStore[i].index += 1
-                    }
+                    userAppCardListStore.sortBy { it.index }
+                    _userAppCards.postValue(userAppCardListStore)
                 }
-                userAppCardListStore.sortBy { it.index }
-                _userAppCards.postValue(userAppCardListStore)
             }
         }
     }
@@ -190,7 +216,20 @@ class AppListViewModel @Inject constructor(
     }
 
     fun changeEditability(appCard: AppCard){
-        appCard.editable.value = !appCard.editable.value!!
+        reviewEditableList[appCard.originalIndex].value =
+            !reviewEditableList[appCard.originalIndex].value!!
     }
 
+    fun saveAction(){
+        appListScope.launch {
+            saveAppCards()
+            deleteAppCards()
+        }
+    }
+
+    fun shareAction(){
+        appListScope.launch {
+            uploadUserAppList()
+        }
+    }
 }

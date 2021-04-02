@@ -1,11 +1,12 @@
 <resources>
     <string name="app_name">MyApp</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="app_icon_description">アプリの名前</string>
     <string name="save">Save</string>
     <string name="share">share</string>
     <string name="add_button_description">ToAddAppCard</string>
     <string name="add">add</string>
+    <string name="to_add_app">TOADDAPP</string>
+    <string name="save_draft">下書き保存</string>
 </resources>

@@ -1,13 +1,11 @@
 package com.example.myapp.page.applist
 
-import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
@@ -90,6 +88,7 @@ class AppListAdapter(
                 lifecycleOwner = viewLifecycleOwner
                 addAppCardButton.setOnClickListener { button ->
                     viewModel.saveButtonPosition(adapterPosition)
+                    viewModel.alignListIndex()
                     button.findNavController()
                         .navigate(R.id.action_appListFragment_to_addAppListFragment)
                 }
@@ -149,7 +148,7 @@ class AppListAdapter(
                     )
                 }
                 appName.text = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
-                textAppCardId.text = item.id.toString()
+                textAppCardId.text = item.originalIndex.toString()
                 textAppCardIndex.text = item.index.toString()
                 executePendingBindings()
             }
