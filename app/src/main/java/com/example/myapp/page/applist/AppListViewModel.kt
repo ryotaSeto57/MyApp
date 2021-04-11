@@ -1,5 +1,6 @@
 package com.example.myapp.page.applist
 
+import android.net.Uri
 import android.view.View
 import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
@@ -33,6 +34,12 @@ class AppListViewModel @Inject constructor(
         Timber.i("AppListViewModel created")
         Timber.i(savedStateHandle.keys().joinToString())
         setUserAppList()
+    }
+
+    private val _imageUri :MutableLiveData<String> = savedStateHandle.getLiveData<String>("imageUriString","")
+    val imageUri: LiveData<Uri>
+    = Transformations.map(_imageUri){
+        Uri.parse(it)
     }
 
     private val _userAppCards = MutableLiveData<MutableList<AppCard>>()
@@ -160,7 +167,7 @@ class AppListViewModel @Inject constructor(
             }
     }
 
-    fun removeAppDataFromList(index: Int, appCardId: Long) {
+    fun removeAppDataFromList(appCardId: Long) {
         appListScope.launch {
             deleteAppCardId.add(appCardId)
             userAppCardListStore = _userAppCards.value!!
@@ -232,6 +239,12 @@ class AppListViewModel @Inject constructor(
             saveAppCards()
             deleteAppCards()
             uploadUserAppList()
+        }
+    }
+
+    fun setImageUri(uri: Uri?){
+        appListScope.launch {
+            _imageUri.value = uri.toString()
         }
     }
 }

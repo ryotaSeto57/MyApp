@@ -38,7 +38,17 @@
             app:sdMainFabClosedSrc="@drawable/ic_baseline_check_24"
             app:sdMainFabOpenedSrc="@drawable/ic_baseline_close_24"
             app:sdOverlayLayout="@id/overlay" />
-
+<!--
+        <ImageView
+            android:id="@+id/test_screen_shot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:src="@drawable/ic_launcher_foreground"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/speed_dial"
+            app:layout_constraintStart_toStartOf="parent" />
+-->
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

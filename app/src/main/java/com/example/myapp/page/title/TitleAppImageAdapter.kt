@@ -47,7 +47,8 @@ class TitleAppImageAdapter(
                     null
                 }
                 appImage.apply {
-                    setImageDrawable(appInfo?.loadIcon(pm) ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))
+                    setImageDrawable(appInfo?.loadIcon(pm)
+                        ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))
                     setOnClickListener { view ->
                         val action =
                             TitleFragmentDirections.actionTitleFragmentToAppListFragment(

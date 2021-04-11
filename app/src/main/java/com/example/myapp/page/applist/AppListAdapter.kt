@@ -1,5 +1,6 @@
 package com.example.myapp.page.applist
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
@@ -13,23 +14,22 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.database.AppCard
-import com.example.myapp.databinding.AddAppButtonBinding
-import com.example.myapp.databinding.ListItemAppBinding
-import com.example.myapp.databinding.ShareButtonBinding
+import com.example.myapp.databinding.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Exception
 
-private const val ITEM_VIEW_TYPE_ITEM = 0
-private const val ITEM_VIEW_TYPE_BUTTON = 1
-private const val ITEM_VIEW_TYPE_SHARE_BUTTON = 2
+private const val ITEM_VIEW_TYPE_SCREEN_SHOT = 0
+private const val ITEM_VIEW_TYPE_ITEM = 1
+private const val ITEM_VIEW_TYPE_BUTTON = 2
 private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
 
 class AppListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
-    private val viewModel: AppListViewModel
+    private val viewModel: AppListViewModel,
+    private val fragment: AppListFragment
 ) : ListAdapter<DataItem, RecyclerView.ViewHolder>(AppDataDiffCallback()) {
 
     private val adapterScope = CoroutineScope(Dispatchers.Default)
@@ -43,8 +43,8 @@ class AppListAdapter(
             is ButtonHolder -> {
                 holder.bind(viewLifecycleOwner, viewModel)
             }
-            is ShareButtonHolder -> {
-                holder.bind(viewModel)
+            is ScreenShotHolder -> {
+                holder.bind(viewModel, fragment, viewLifecycleOwner)
             }
         }
     }
@@ -53,7 +53,7 @@ class AppListAdapter(
         return when (viewType) {
             ITEM_VIEW_TYPE_ITEM -> ViewHolder.from(parent)
             ITEM_VIEW_TYPE_BUTTON -> ButtonHolder.from(parent)
-            ITEM_VIEW_TYPE_SHARE_BUTTON -> ShareButtonHolder.from(parent)
+            ITEM_VIEW_TYPE_SCREEN_SHOT -> ScreenShotHolder.from(parent)
             else -> throw ClassCastException("Unknown viewType $viewType")
         }
     }
@@ -62,7 +62,7 @@ class AppListAdapter(
         return when (getItem(position)) {
             is DataItem.AppCardItem -> ITEM_VIEW_TYPE_ITEM
             is DataItem.AddAppButton -> ITEM_VIEW_TYPE_BUTTON
-            is DataItem.ShareButton -> ITEM_VIEW_TYPE_SHARE_BUTTON
+            is DataItem.ScreenShot -> ITEM_VIEW_TYPE_SCREEN_SHOT
         }
     }
 
@@ -70,8 +70,9 @@ class AppListAdapter(
         adapterScope.launch {
             val items = when (list) {
                 null -> listOf(DataItem.AddAppButton)
-                else -> list.map { DataItem.AppCardItem(it) } +
-                        listOf(DataItem.AddAppButton) + listOf(DataItem.ShareButton)
+                else -> listOf(DataItem.ScreenShot) +
+                        list.map { DataItem.AppCardItem(it) } +
+                        listOf(DataItem.AddAppButton)
             }
             withContext(Dispatchers.Main) {
                 submitList(items)
@@ -105,20 +106,31 @@ class AppListAdapter(
         }
     }
 
-    class ShareButtonHolder private constructor(
-        private val binding: ShareButtonBinding
+    class ScreenShotHolder private constructor(
+        val binding: ListItemScreenShotBinding,
+        private val context: Context
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(viewModel: AppListViewModel) {
+
+        fun bind(
+            viewModel: AppListViewModel,
+            fragment: AppListFragment,
+            viewLifecycleOwner: LifecycleOwner
+        ) {
             binding.run {
                 this.appListViewModel = viewModel
+                lifecycleOwner = viewLifecycleOwner
+                screenShotButton.setOnClickListener {
+                    fragment.selectImage()
+                }
+                executePendingBindings()
             }
         }
 
         companion object {
-            fun from(parent: ViewGroup): ShareButtonHolder {
+            fun from(parent: ViewGroup): ScreenShotHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
-                val binding = ShareButtonBinding.inflate(layoutInflater, parent, false)
-                return ShareButtonHolder(binding)
+                val binding = ListItemScreenShotBinding.inflate(layoutInflater, parent, false)
+                return ScreenShotHolder(binding, parent.context)
             }
         }
     }
@@ -181,11 +193,11 @@ sealed class DataItem {
     }
 
     object AddAppButton : DataItem() {
-        override val id = Long.MAX_VALUE - 1
+        override val id = Long.MAX_VALUE
     }
 
-    object ShareButton : DataItem() {
-        override val id = Long.MAX_VALUE
+    object ScreenShot : DataItem() {
+        override val id = Long.MIN_VALUE
     }
 
     abstract val id: Long

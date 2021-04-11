@@ -42,17 +42,17 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_marginStart="8dp"
+                    android:layout_marginTop="16dp"
                     android:contentDescription="@string/app_icon_description"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="0.19999999"
                     tools:srcCompat="@mipmap/ic_launcher_round" />
 
                 <TextView
                     android:id="@+id/app_name"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
+                    android:layout_marginTop="24dp"
                     android:textSize="24sp"
                     app:layout_constraintEnd_toStartOf="@+id/imageButton"
                     app:layout_constraintStart_toEndOf="@+id/app_image"
@@ -64,24 +64,23 @@
                     android:id="@+id/app_review_text"
                     android:layout_width="300dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
+                    android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
                     android:background="#ffffff"
                     android:inputType="textMultiLine"
                     android:minLines="3"
-                    android:visibility="@{appListViewModel.reviewEditableList[appCard.originalIndex]? View.VISIBLE : View.GONE}"
                     android:text="@={appListViewModel.userReviewList[appCard.originalIndex]}"
+                    android:visibility="@{appListViewModel.reviewEditableList[appCard.originalIndex]? View.VISIBLE : View.GONE}"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/app_name" />
+                    app:layout_constraintTop_toBottomOf="@+id/app_image" />
 
                 <TextView
                     android:id="@+id/textAppCardId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="15dp"
-                    app:layout_constraintBottom_toTopOf="@+id/app_review_text"
+                    android:layout_marginTop="8dp"
                     app:layout_constraintEnd_toStartOf="@+id/textAppCardIndex"
                     app:layout_constraintStart_toEndOf="@+id/app_image"
                     app:layout_constraintTop_toBottomOf="@+id/app_name" />
@@ -90,8 +89,7 @@
                     android:id="@+id/textAppCardIndex"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="15dp"
-                    app:layout_constraintBottom_toTopOf="@+id/app_review_text"
+                    android:layout_marginTop="8dp"
                     app:layout_constraintEnd_toStartOf="@+id/imageButton"
                     app:layout_constraintStart_toEndOf="@+id/textAppCardId"
                     app:layout_constraintTop_toBottomOf="@+id/app_name" />
@@ -100,14 +98,12 @@
                     android:id="@+id/imageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:background="@drawable/add_button_shape"
                     android:onClick="@{()-> appListViewModel.changeEditability(appCard)}"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintVertical_bias="0.2"
                     android:src="@{appListViewModel.reviewEditableList[appCard.originalIndex]? @drawable/ic_baseline_arrow_drop_up_36 :@drawable/ic_baseline_create_24}"
-                    />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
     </androidx.constraintlayout.widget.ConstraintLayout>
