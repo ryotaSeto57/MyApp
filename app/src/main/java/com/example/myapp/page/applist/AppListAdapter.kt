@@ -10,6 +10,8 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
@@ -121,6 +123,16 @@ class AppListAdapter(
                 lifecycleOwner = viewLifecycleOwner
                 screenShotButton.setOnClickListener {
                     fragment.selectImage()
+                }
+                screenShotView.apply{
+                    layoutManager = LinearLayoutManager(context,HORIZONTAL,false)
+                    adapter = ScreenShotAdapter(viewLifecycleOwner).apply {
+                        viewModel.imageUriList.observe(viewLifecycleOwner,{ uriList ->
+                            uriList?.let {
+                                submitList(it)
+                            }
+                        })
+                    }
                 }
                 executePendingBindings()
             }

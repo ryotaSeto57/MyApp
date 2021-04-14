@@ -1,6 +1,5 @@
 package com.example.myapp.database
 
-import androidx.lifecycle.MutableLiveData
 import androidx.room.*
 
 @Entity(tableName = "app_card_table")

@@ -6,10 +6,12 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.AppCardList
+import com.example.myapp.database.ScreenShotItem
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
@@ -45,18 +47,18 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getAppCard(listId: Long,originalIndex:Int): AppCard?{
-        return withContext(Dispatchers.IO){
-            return@withContext database.getAppCard(listId,originalIndex)
+    override suspend fun getAppCard(listId: Long, originalIndex: Int): AppCard? {
+        return withContext(Dispatchers.IO) {
+            return@withContext database.getAppCard(listId, originalIndex)
         }
     }
 
-    override suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard>{
-        return withContext(Dispatchers.IO){
+    override suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard> {
+        return withContext(Dispatchers.IO) {
             val appCardsFromDatabase: MutableList<AppCard> = mutableListOf()
-            for (appCard in appCards){
+            for (appCard in appCards) {
                 add(appCard)
-                val appCardFromDatabase = getAppCard(appCard.listId,appCard.originalIndex)
+                val appCardFromDatabase = getAppCard(appCard.listId, appCard.originalIndex)
                 if (appCardFromDatabase != null) {
                     appCardsFromDatabase.add(appCardFromDatabase)
                 }
@@ -132,12 +134,12 @@ class AppListRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             var appIcon: Drawable
             var appUid: String
-            var appInfo :ApplicationInfo
+            var appInfo: ApplicationInfo
             for (appCard in listOfAppCards) {
                 appUid = appCard.packageName
-                appInfo = try{
+                appInfo = try {
                     pm.getApplicationInfo(appCard.packageName, 0)
-                }catch (e: PackageManager.NameNotFoundException) {
+                } catch (e: PackageManager.NameNotFoundException) {
                     continue
                 }
                 val uri = kotlin.runCatching {
@@ -193,10 +195,36 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getNumberOfPastAppCardsInTotal(listId: Long):Int {
+    override suspend fun getNumberOfPastAppCardsInTotal(listId: Long): Int {
         return withContext(Dispatchers.IO) {
             val appCardList = database.getAppCardList(listId)
             return@withContext appCardList?.numberOfAppsInTotal ?: 0
+        }
+    }
+
+    override suspend fun saveScreenShotItem(uri: Uri, index: Int, listId: Long) {
+        withContext(Dispatchers.IO) {
+            database.insert(
+                ScreenShotItem(
+                    id = 0,
+                    uriString = uri.toString(),
+                    index = index,
+                    listId = listId
+                )
+            )
+        }
+    }
+
+    override suspend fun deleteScreenShotItem(listId: Long) {
+        withContext(Dispatchers.IO) {
+            database.deleteScreenShotItems(listId)
+        }
+    }
+
+    override suspend fun getImageUriStrings(listId: Long): MutableList<String> {
+        return withContext(Dispatchers.IO) {
+            return@withContext database.getScreenShotItems(listId).map { it.uriString }
+                .toMutableList()
         }
     }
 }

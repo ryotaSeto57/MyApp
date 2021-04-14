@@ -1,9 +1,11 @@
 package com.example.myapp.repository
 
 import android.content.pm.ApplicationInfo
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppCardList
+import com.example.myapp.database.ScreenShotItem
 
 interface Repository {
 
@@ -34,4 +36,10 @@ interface Repository {
     suspend fun getAppCard(listId: Long,originalIndex: Int): AppCard?
 
     suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard>
+
+    suspend fun saveScreenShotItem(uri: Uri,index: Int,listId: Long)
+
+    suspend fun deleteScreenShotItem(listId: Long)
+
+    suspend fun getImageUriStrings(listId :Long):MutableList<String>
 }

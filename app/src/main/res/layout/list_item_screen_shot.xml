@@ -42,22 +42,19 @@
                     android:drawableTop="@drawable/ic_baseline_image_search_48"
                     android:text="@string/screenshot"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/screen_shot_view"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <ImageView
-                    android:id="@+id/screen_shot_image"
-                    android:layout_width="100dp"
-                    android:layout_height="140dp"
-                    android:src="@{appListViewModel.imageUri}"
+                <androidx.recyclerview.widget.RecyclerView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/screen_shot_view"
                     app:layout_constraintEnd_toStartOf="@id/screen_shot_button"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    tools:srcCompat="@drawable/ic_launcher_foreground"
-                    tools:layout_editor_absoluteX="27dp"
-                    tools:layout_editor_absoluteY="16dp" />
+                    />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
 

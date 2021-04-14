@@ -1,14 +1,19 @@
 package com.example.myapp.page.applist
 
+import android.app.Activity
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -29,7 +34,7 @@ import javax.inject.Singleton
 @Singleton
 class AppListFragment : Fragment() {
     private lateinit var binding: FragmentAppListBinding
-    lateinit var getContent :ActivityResultLauncher<String>
+    private lateinit var getContent :ActivityResultLauncher<String>
 
     private val viewModel: AppListViewModel
             by navGraphViewModels(R.id.app_navigation) { defaultViewModelProviderFactory }
@@ -93,10 +98,11 @@ class AppListFragment : Fragment() {
             }
         }
 
-        getContent =
-            registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-                viewModel.setImageUri(uri)
+        getContent = registerForActivityResult(MultipleImageContract()){ uriList ->
+            uriList?.let {
+                viewModel.setImageUri(it)
             }
+        }
 
         viewModel.userAppCards.observe(viewLifecycleOwner, Observer {
             it?.let {
@@ -142,7 +148,7 @@ class AppListFragment : Fragment() {
             val fromPosition = viewHolder.adapterPosition
             val toPosition = target.adapterPosition
             val fromUserAppCard = fromPosition - 1
-            val toUserAppCard = toPosition -1
+            val toUserAppCard = toPosition - 1
             viewModel.replaceAppData(fromUserAppCard, toUserAppCard)
         }
 
@@ -164,4 +170,25 @@ class AppListFragment : Fragment() {
             viewModel.removeAppDataFromList(appCardId)
         }
     })
+}
+
+class MultipleImageContract: ActivityResultContract<String, MutableList<Uri?>?>(){
+    override fun createIntent(context: Context, input: String?): Intent {
+        return Intent(Intent.ACTION_GET_CONTENT)
+            .addCategory(Intent.CATEGORY_OPENABLE)
+            .putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true)
+            .setType(input)
+    }
+    override fun parseResult(resultCode: Int, intent: Intent?): MutableList<Uri?>? {
+        if (intent == null || resultCode != Activity.RESULT_OK) return null
+        val fileUris = mutableListOf<Uri?>()
+        if(intent.data != null){fileUris.add(intent.data)}else
+        {
+            val clipData :ClipData = intent.clipData!!
+            for ( i in 0 until clipData.itemCount){
+                fileUris.add(clipData.getItemAt(i).uri)
+            }
+        }
+        return fileUris
+    }
 }

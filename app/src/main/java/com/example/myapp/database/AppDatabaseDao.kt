@@ -41,4 +41,13 @@ interface AppDatabaseDao {
 
     @Query("SELECT * FROM app_card_table WHERE list_id = :listId AND original_index = :originalIndex")
     fun getAppCard(listId: Long, originalIndex: Int): AppCard?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(screenShot: ScreenShotItem)
+
+    @Query("SELECT * FROM screen_shot_table WHERE list_id = :listId ORDER BY `index`")
+    fun getScreenShotItems(listId: Long) :MutableList<ScreenShotItem>
+
+    @Query("DELETE FROM screen_shot_table WHERE list_id =:listId")
+    fun deleteScreenShotItems(listId:Long)
 }
