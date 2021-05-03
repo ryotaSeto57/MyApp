@@ -2,6 +2,7 @@ package com.example.myapp.page.title
 
 import android.content.pm.PackageManager
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleOwner
@@ -47,16 +48,16 @@ class TitleAppImageAdapter(
                     null
                 }
                 appImage.apply {
-                    setImageDrawable(appInfo?.loadIcon(pm)
-                        ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))
-                    setOnClickListener { view ->
-                        val action =
-                            TitleFragmentDirections.actionTitleFragmentToAppListFragment(
-                                item.listId,
-                                false
-                            )
+                    setOnClickListener { view: View ->
+                        val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(
+                            item.listId,
+                            createNewList = false,
+                            underEdit = false
+                        )
                         view.findNavController().navigate(action)
                     }
+                    setImageDrawable(appInfo?.loadIcon(pm)
+                        ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))
                 }
                 lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()

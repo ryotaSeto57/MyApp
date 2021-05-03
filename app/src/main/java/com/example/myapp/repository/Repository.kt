@@ -37,9 +37,9 @@ interface Repository {
 
     suspend fun addAppCards(appCards: MutableList<AppCard>): MutableList<AppCard>
 
-    suspend fun saveScreenShotItem(uri: Uri,index: Int,listId: Long)
+    suspend fun saveScreenShotItem(uriString: String,index: Int,listId: Long)
 
     suspend fun deleteScreenShotItem(listId: Long)
 
-    suspend fun getImageUriStrings(listId :Long):MutableList<String>
+    suspend fun getScreenShotItems(listId :Long):MutableList<ScreenShotItem>
 }

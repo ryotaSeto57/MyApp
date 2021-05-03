@@ -121,15 +121,12 @@ class AppListAdapter(
             binding.run {
                 this.appListViewModel = viewModel
                 lifecycleOwner = viewLifecycleOwner
-                screenShotButton.setOnClickListener {
-                    fragment.selectImage()
-                }
                 screenShotView.apply{
                     layoutManager = LinearLayoutManager(context,HORIZONTAL,false)
-                    adapter = ScreenShotAdapter(viewLifecycleOwner).apply {
-                        viewModel.imageUriList.observe(viewLifecycleOwner,{ uriList ->
+                    adapter = ScreenShotAdapter(viewLifecycleOwner,fragment,viewModel).apply {
+                        viewModel.screenShotItemList.observe(viewLifecycleOwner,{ uriList ->
                             uriList?.let {
-                                submitList(it)
+                                submitImageItemList(it)
                             }
                         })
                     }

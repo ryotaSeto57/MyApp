@@ -5,9 +5,6 @@ import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppCardList
 import com.example.myapp.repository.AppListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -31,6 +28,5 @@ class TitleViewModel @Inject constructor(
         val allAppCards = appListRepository.getAllAppCards()
         emitSource(allAppCards)
     }
-
 
 }

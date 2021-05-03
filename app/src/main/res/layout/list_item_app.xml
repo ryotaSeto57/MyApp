@@ -42,7 +42,7 @@
                     android:layout_width="60dp"
                     android:layout_height="60dp"
                     android:layout_marginStart="8dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
                     android:contentDescription="@string/app_icon_description"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -58,7 +58,6 @@
                     app:layout_constraintStart_toEndOf="@+id/app_image"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:text="@string/app_name" />
-
 
                 <EditText
                     android:id="@+id/app_review_text"
@@ -99,6 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:layout_marginEnd="8dp"
                     android:background="@drawable/add_button_shape"
                     android:onClick="@{()-> appListViewModel.changeEditability(appCard)}"
                     android:src="@{appListViewModel.reviewEditableList[appCard.originalIndex]? @drawable/ic_baseline_arrow_drop_up_36 :@drawable/ic_baseline_create_24}"

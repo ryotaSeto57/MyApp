@@ -202,12 +202,12 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun saveScreenShotItem(uri: Uri, index: Int, listId: Long) {
+    override suspend fun saveScreenShotItem(uriString: String, index: Int, listId: Long) {
         withContext(Dispatchers.IO) {
             database.insert(
                 ScreenShotItem(
                     id = 0,
-                    uriString = uri.toString(),
+                    uriString = uriString,
                     index = index,
                     listId = listId
                 )
@@ -221,10 +221,9 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun getImageUriStrings(listId: Long): MutableList<String> {
+    override suspend fun getScreenShotItems(listId: Long): MutableList<ScreenShotItem> {
         return withContext(Dispatchers.IO) {
-            return@withContext database.getScreenShotItems(listId).map { it.uriString }
-                .toMutableList()
+            return@withContext database.getScreenShotItems(listId)
         }
     }
 }

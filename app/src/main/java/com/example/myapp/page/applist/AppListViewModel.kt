@@ -5,10 +5,13 @@ import android.view.View
 import androidx.lifecycle.*
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AddAppName
+import com.example.myapp.database.ScreenShotItem
+import com.example.myapp.page.dialog.ExceedsMaxOfScreenShotItemsDialog
 import com.example.myapp.repository.AppListRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import timber.log.Timber
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 
 private const val MAX_NUMBER_OF_APPS = 500
@@ -42,10 +45,11 @@ class AppListViewModel @Inject constructor(
             MutableList(MAX_NUMBER_OF_SCREENSHOT) { index ->
                 savedStateHandle.get<String>("uriString$index") ?:""
             })
-    val imageUriList: LiveData<MutableList<Uri>> =
-        Transformations.map(_imageUriStringList) { list ->
-            MutableList(list.apply{ removeAll(listOf("")) }.size) {
-                Uri.parse(list[it])
+
+    val screenShotItemList: LiveData<MutableList<ScreenShotItem>> =
+        _imageUriStringList.map{ uriStringList ->
+            MutableList(uriStringList.apply{ removeAll(listOf("")) }.size){
+                ScreenShotItem(id = 0,listId = listId ?: 0L,uriString = uriStringList[it],index = it)
             }
         }
 
@@ -60,6 +64,10 @@ class AppListViewModel @Inject constructor(
         )
     }
 
+    val descriptionEditable: MutableLiveData<Boolean> = savedStateHandle.getLiveData(
+        "EDITABLE_DESCRIPTION",false
+    )
+
     val reviewEditableList: List<MutableLiveData<Boolean>> = List(MAX_NUMBER_OF_APPS) { index ->
         savedStateHandle.getLiveData(
             "EDITABLE_REVIEW_OF_ORIGINAL_INDEX$index",
@@ -68,14 +76,14 @@ class AppListViewModel @Inject constructor(
     }
 
     private val _listOfAppName: LiveData<MutableList<String>> =
-        Transformations.map(userAppCards) {
+        userAppCards.map{
             MutableList(it.size) { index ->
                 it[index].packageName
             }
         }
 
     private val _listOfAddAppName: LiveData<MutableList<String>> =
-        Transformations.map(_listOfAppName) { listOfAppName ->
+        _listOfAppName.map { listOfAppName ->
             val allUsersAppNameList = appListRepository.getUserAppInfo()
             for (packageName in listOfAppName) {
                 allUsersAppNameList.removeAll { it.packageName == packageName }
@@ -83,7 +91,7 @@ class AppListViewModel @Inject constructor(
             allUsersAppNameList.map { it.packageName }.toMutableList()
         }
 
-    val addButtonVisible: LiveData<Int> = Transformations.map(_listOfAddAppName) {
+    val addButtonVisible: LiveData<Int> = _listOfAddAppName.map {
         if (it.size == 0) {
             View.GONE
         } else {
@@ -92,7 +100,7 @@ class AppListViewModel @Inject constructor(
     }
 
     val addAppNameList: LiveData<MutableList<AddAppName>> =
-        Transformations.map(_listOfAddAppName) {
+        _listOfAddAppName.map {
             MutableList(it.size) { index ->
                 AddAppName(index.toLong(), it[index])
             }
@@ -105,6 +113,7 @@ class AppListViewModel @Inject constructor(
     private var userAppCardListStore: MutableList<AppCard> = mutableListOf()
     private var addUserAppNameListStore: MutableList<String> = mutableListOf()
     private var deleteAppCardId: MutableList<Long> = mutableListOf()
+    private var uriStringStore: MutableList<String> = mutableListOf()
 
     private fun setUserAppList() {
         appListScope.launch {
@@ -118,18 +127,24 @@ class AppListViewModel @Inject constructor(
                 appListRepository.plusNumberOfAppsInTotal(appCardList.id, appCards.size)
             } else {
                 val listId: Long = listId ?: 0L
-                val appCards = getAppCardsFromDatabase(listId)
-                val uriStrings = getImageUriStringList(listId)
-                _userAppCards.value = appCards
-                _imageUriStringList.value = uriStrings
-                for ((index,i) in uriStrings.withIndex()){
-                    savedStateHandle.set("uriString$index",i)
-                }
+                val appCards: MutableList<AppCard> = getAppCardsFromDatabase(listId)
+                val appCardsStore :CopyOnWriteArrayList<AppCard> = CopyOnWriteArrayList(appCards)
+                    for (i in appCardsStore) {
+                        if (savedStateHandle.contains("NON_DISPLAYED_CARD_OF_ID_${i.id}")) {
+                            appCardsStore.remove(i)
+                        }
+                    }
+                _userAppCards.value = appCardsStore.toMutableList()
                 if (underEdit != true) {
                     for (appCard in appCards) {
                         savedStateHandle
                             .set("REVIEW_OF_ORIGINAL_INDEX${appCard.originalIndex}", appCard.review)
                     }
+                    val screenShotItems = getScreenShotItems(listId).sortedBy { it.index }
+                    for ((index,i) in screenShotItems.withIndex()){
+                        savedStateHandle.set("uriString$index",i.uriString)
+                    }
+                    _imageUriStringList.value = screenShotItems.map { it.uriString }.toMutableList()
                 }
                 savedStateHandle.set("underEdit", true)
             }
@@ -142,9 +157,9 @@ class AppListViewModel @Inject constructor(
         }
     }
 
-    private suspend fun getImageUriStringList(listId: Long):MutableList<String>{
+    private suspend fun getScreenShotItems(listId: Long):MutableList<ScreenShotItem>{
         return withContext(Dispatchers.IO){
-            return@withContext appListRepository.getImageUriStrings(listId)
+            return@withContext appListRepository.getScreenShotItems(listId)
         }
     }
 
@@ -192,16 +207,17 @@ class AppListViewModel @Inject constructor(
     }
 
     private suspend fun saveScreenShotItem(){
-        if (imageUriList.value !=null) {
+        if (screenShotItemList.value !=null) {
             appListRepository.deleteScreenShotItem(listId!!)
-            for ((index,i) in imageUriList.value!!.withIndex()) {
-                appListRepository.saveScreenShotItem(i,index,listId!!)
+            for (i in screenShotItemList.value!!) {
+                appListRepository.saveScreenShotItem(i.uriString,i.index,listId!!)
             }
         }
     }
 
     fun removeAppDataFromList(appCardId: Long) {
         appListScope.launch {
+            savedStateHandle.set("NON_DISPLAYED_CARD_OF_ID_$appCardId",true)
             deleteAppCardId.add(appCardId)
             userAppCardListStore = _userAppCards.value!!
             userAppCardListStore.remove(userAppCardListStore.find { it.id == appCardId })
@@ -264,6 +280,12 @@ class AppListViewModel @Inject constructor(
         }
     }
 
+    fun changeEditability(){
+        appListScope.launch {
+            descriptionEditable.value = !descriptionEditable.value!!
+        }
+    }
+
     fun saveAction() {
         appListScope.launch {
             saveScreenShotItem()
@@ -282,14 +304,30 @@ class AppListViewModel @Inject constructor(
 
     fun setImageUri(uriList: MutableList<Uri?>) {
         appListScope.launch {
+//            TODO("to check if uri is of ScreenShot Image.")
 //            TODO("to add alert if uriList exceeds MAX_NUMBER_OF_SCREENSHOT")
-            if(uriList.size <= MAX_NUMBER_OF_SCREENSHOT) {
-                _imageUriStringList.value = uriList.map{it.toString()}.toMutableList()
-                for ((index,i) in uriList.withIndex()){
-                    savedStateHandle.set("uriString$index",i.toString())
+                val imageUriStringList = _imageUriStringList.value
+                val uriStringList = uriList.map { it.toString() }.toMutableList()
+                _imageUriStringList.value =
+                    imageUriStringList?.apply {plusAssign( uriStringList)} ?: uriStringList
+            if(_imageUriStringList.value != null) {
+                for ((index, i) in _imageUriStringList.value!!.withIndex()) {
+                    savedStateHandle.set(
+                        "uriString${index}",
+                        i
+                    )
                 }
             }
         }
     }
+    fun removeScreenShotItem(screenShotItem: ScreenShotItem){
+        appListScope.launch {
+            uriStringStore = _imageUriStringList.value!!
+            val uriStringToRemove = uriStringStore.find{it == screenShotItem.uriString}
+            savedStateHandle.remove<String>("REVIEW_OF_ORIGINAL_INDEX${uriStringStore.indexOf(uriStringToRemove)}")
+            uriStringStore.remove(uriStringToRemove)
+            _imageUriStringList.value = uriStringStore
 
+        }
+    }
 }

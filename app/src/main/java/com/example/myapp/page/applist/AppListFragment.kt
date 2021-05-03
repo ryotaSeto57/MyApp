@@ -11,7 +11,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -21,6 +20,7 @@ import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
+import com.example.myapp.page.dialog.ExceedsMaxOfScreenShotItemsDialog
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
 import dagger.hilt.android.AndroidEntryPoint
@@ -100,7 +100,12 @@ class AppListFragment : Fragment() {
 
         getContent = registerForActivityResult(MultipleImageContract()){ uriList ->
             uriList?.let {
-                viewModel.setImageUri(it)
+                if((viewModel.screenShotItemList.value?.size ?:0)+ uriList.size <= 10) {
+                    viewModel.setImageUri(it)
+                }else{
+                    alertMessage()
+                    viewModel.setImageUri(it)
+                }
             }
         }
 
@@ -118,10 +123,14 @@ class AppListFragment : Fragment() {
         super.onDestroy()
     }
 
+    private fun alertMessage(){
+        val exceedsMaxOfScreenShotItemsDialog = ExceedsMaxOfScreenShotItemsDialog()
+        exceedsMaxOfScreenShotItemsDialog.show(childFragmentManager,"alert")
+    }
+
     fun selectImage() {
         getContent.launch("image/*")
     }
-
 
     private val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
 
@@ -172,21 +181,31 @@ class AppListFragment : Fragment() {
     })
 }
 
-class MultipleImageContract: ActivityResultContract<String, MutableList<Uri?>?>(){
+class MultipleImageContract
+    : ActivityResultContract<String, MutableList<Uri?>?>(){
     override fun createIntent(context: Context, input: String?): Intent {
-        return Intent(Intent.ACTION_GET_CONTENT)
+        return Intent(Intent.ACTION_OPEN_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
             .putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             .setType(input)
     }
     override fun parseResult(resultCode: Int, intent: Intent?): MutableList<Uri?>? {
         if (intent == null || resultCode != Activity.RESULT_OK) return null
         val fileUris = mutableListOf<Uri?>()
-        if(intent.data != null){fileUris.add(intent.data)}else
+        if(intent.data != null){
+            fileUris.add(intent.data)
+        }else
         {
             val clipData :ClipData = intent.clipData!!
-            for ( i in 0 until clipData.itemCount){
-                fileUris.add(clipData.getItemAt(i).uri)
+            if (clipData.itemCount <= 10) {
+                for (i in 0 until clipData.itemCount) {
+                    fileUris.add(clipData.getItemAt(i).uri)
+                }
+            }else{
+                for (i in 0 until 10){
+                    fileUris.add(clipData.getItemAt(i).uri)
+                }
             }
         }
         return fileUris

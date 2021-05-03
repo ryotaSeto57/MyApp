@@ -10,7 +10,7 @@ data class ScreenShotItem(
     val id: Long,
     @ColumnInfo(name = "list_id")
     val listId: Long,
-    @ColumnInfo(name = "uriString")
+    @ColumnInfo(name = "uri_string")
     val uriString: String,
     @ColumnInfo(name="index")
     var index: Int

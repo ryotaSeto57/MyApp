@@ -64,16 +64,12 @@ class TitleListAdapter(
                                 submitList(list.filter { it.listId ==item.id }.sortedBy { it.index })
                             }
                         })
+
                     }
-                    layoutManager = LinearLayoutManager(context, HORIZONTAL, false)
-                }
+                    layoutManager =
+                        LinearLayoutManager(context, HORIZONTAL, false)
 
-                titleListContainer.setOnClickListener { view ->
-                    val action =
-                        TitleFragmentDirections.actionTitleFragmentToAppListFragment(item.id,false)
-                    view.findNavController().navigate(action)
                 }
-
                 lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()
             }
