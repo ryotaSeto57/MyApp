@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppCardList
 import com.example.myapp.database.ScreenShotItem
+import java.util.*
 
 interface Repository {
 
@@ -19,7 +20,7 @@ interface Repository {
 
     suspend fun deleteAppCard(appCardId: Long)
 
-    suspend fun shareList(listOfAppCards: MutableList<AppCard>)
+    suspend fun shareList(listOfAppCards: MutableList<AppCard>): String
 
     suspend fun getLatestAppCardList():AppCardList?
 
@@ -28,10 +29,6 @@ interface Repository {
     suspend fun getAllAppCards(): LiveData<MutableList<AppCard>>
 
     fun getUserAppInfo(): MutableList<ApplicationInfo>
-
-    suspend fun plusNumberOfAppsInTotal(listId: Long, numberOfAddedApps: Int)
-
-    suspend fun getNumberOfPastAppCardsInTotal(listId: Long):Int
 
     suspend fun getAppCard(listId: Long,originalIndex: Int): AppCard?
 
@@ -42,4 +39,15 @@ interface Repository {
     suspend fun deleteScreenShotItem(listId: Long)
 
     suspend fun getScreenShotItems(listId :Long):MutableList<ScreenShotItem>
+
+    suspend fun saveAppCardList(appCardList: AppCardList)
+
+    suspend fun getAppCardList(listId: Long):AppCardList?
+
+    suspend fun shareScreenShot(
+        listOfScreenShotItems: MutableList<ScreenShotItem>,
+        userId: String,
+        documentId:String,
+        screenShotDescription: String
+    ): Date?
 }

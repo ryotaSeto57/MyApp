@@ -8,7 +8,9 @@ import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.myapp.R
@@ -46,7 +48,6 @@ class AddAppListFragment : Fragment() {
                         }
                         return 1
                     }
-
                 }
             }
         }
@@ -57,4 +58,5 @@ class AddAppListFragment : Fragment() {
         })
         return binding.root
     }
+
 }

@@ -4,14 +4,19 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.core.net.toUri
 import androidx.lifecycle.LiveData
 import com.example.myapp.database.AppCard
 import com.example.myapp.database.AppDatabaseDao
 import com.example.myapp.database.AppCardList
 import com.example.myapp.database.ScreenShotItem
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
@@ -21,16 +26,18 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.ByteArrayOutputStream
+import java.util.*
 import javax.inject.Inject
 
 private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
 
 class AppListRepository @Inject constructor(
-    private val database: AppDatabaseDao, @ApplicationContext appContext: Context
+    private val database: AppDatabaseDao,
+    @ApplicationContext appContext: Context
 ) : Repository {
 
     private val pm = appContext.packageManager
-
+    private val contentResolver = appContext.contentResolver
     private val db = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val storageRef = storage.reference
@@ -130,8 +137,8 @@ class AppListRepository @Inject constructor(
         }
     }
 
-    override suspend fun shareList(listOfAppCards: MutableList<AppCard>) {
-        withContext(Dispatchers.IO) {
+    override suspend fun shareList(listOfAppCards: MutableList<AppCard>): String {
+        return withContext(Dispatchers.IO) {
             var appIcon: Drawable
             var appUid: String
             var appInfo: ApplicationInfo
@@ -152,14 +159,14 @@ class AppListRepository @Inject constructor(
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
                         val data = baos.toByteArray()
                         storageRef.child("images/$appUid").putBytes(data).await()
-                        storageRef.child("images/${appUid}").downloadUrl.await()
+                        storageRef.child("images/$appUid").downloadUrl.await()
                     }
                 }
                 uri.getOrNull()
                     ?.also { appCard.downloadUrl = it.toString() }
                     ?: Timber.w("error in uploading $appUid")
             }
-            val userAppCards: MutableMap<String, Any> = mutableMapOf()
+            val userAppCards: MutableMap<String, MutableMap<String, String>> = mutableMapOf()
             for ((index, appCard) in listOfAppCards.withIndex()) {
                 val appInfo: ApplicationInfo? = try {
                     pm.getApplicationInfo(appCard.packageName, 0)
@@ -171,34 +178,19 @@ class AppListRepository @Inject constructor(
                     "appUid" to appCard.packageName,
                     "appReview" to appCard.review,
                     "appName" to appName,
-                    "URL" to appCard.downloadUrl
+                    "URL" to appCard.downloadUrl,
                 )
                 userAppCards[index.toString()] = app
             }
+            var listUrl = ""
             try {
-                db.collection("users").add(userAppCards).await()
+                db.collection("lists").add(userAppCards).await().also { documentReference ->
+                    listUrl = documentReference.id
+                }
             } catch (e: Exception) {
                 Timber.w("Error adding document")
             }
-        }
-    }
-
-    override suspend fun plusNumberOfAppsInTotal(listId: Long, numberOfAddedApps: Int) {
-        withContext(Dispatchers.IO) {
-            val appCardList = database.getAppCardList(listId)
-            database.update(
-                AppCardList(
-                    listId,
-                    (appCardList?.numberOfAppsInTotal ?: 0) + numberOfAddedApps
-                )
-            )
-        }
-    }
-
-    override suspend fun getNumberOfPastAppCardsInTotal(listId: Long): Int {
-        return withContext(Dispatchers.IO) {
-            val appCardList = database.getAppCardList(listId)
-            return@withContext appCardList?.numberOfAppsInTotal ?: 0
+            return@withContext listUrl
         }
     }
 
@@ -225,6 +217,80 @@ class AppListRepository @Inject constructor(
         return withContext(Dispatchers.IO) {
             return@withContext database.getScreenShotItems(listId)
         }
+    }
+
+    override suspend fun saveAppCardList(appCardList: AppCardList) {
+        withContext(Dispatchers.IO) {
+            database.update(appCardList)
+        }
+    }
+
+    override suspend fun getAppCardList(listId: Long): AppCardList? {
+        return withContext(Dispatchers.IO) {
+            database.getAppCardList(listId)
+        }
+    }
+
+    override suspend fun shareScreenShot(
+        listOfScreenShotItems: MutableList<ScreenShotItem>,
+        userId: String,
+        documentId: String,
+        screenShotDescription: String
+    ): Date? {
+        return withContext(Dispatchers.IO) {
+            for (i in listOfScreenShotItems) {
+                var bitmap: Bitmap
+                if (Build.VERSION.SDK_INT < 28) {
+                    @Suppress("DEPRECATION")
+                    bitmap = MediaStore.Images.Media.getBitmap(contentResolver, i.uriString.toUri())
+                } else {
+                    val source = ImageDecoder.createSource(contentResolver, i.uriString.toUri())
+                    bitmap = ImageDecoder.decodeBitmap(source)
+                }
+                val baos = ByteArrayOutputStream()
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
+                val data = baos.toByteArray()
+                try {
+                    storageRef.child("screenshots/${userId}/${i.index}").putBytes(data).await()
+                } catch (e: Exception) {
+                    Timber.w("Error in adding ScreenShot of index ${i.index}")
+                }
+            }
+            val userInfo: MutableMap<String, Any> =
+                mutableMapOf(
+                    "screenshot_description" to screenShotDescription,
+                    "user_id" to userId,
+                    "time_stamp" to FieldValue.serverTimestamp()
+                )
+            try {
+                db.collection("lists").document(documentId).update(userInfo).await()
+            } catch (e: Exception) {
+                Timber.w("Error in adding screenshot description.")
+            }
+            var document: Map<String, Any>? = null
+            db.collection("lists").document(documentId).get().await().also { documentSnapshot ->
+                documentSnapshot?.let { document = it.data }
+            }
+            return@withContext document?.let { (it["time_stamp"] as Timestamp).toDate() }
+        }
+    }
+}
+
+private const val USER_LIST_ID_LENGTH = 20
+private const val USER_LIST_ID_ALPHABET =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+class CreateUserListId {
+
+    private val rand = Random()
+
+    fun createId(): String {
+        val builder = StringBuilder()
+        val maxRandom = USER_LIST_ID_ALPHABET.length
+        for (i in 0..USER_LIST_ID_LENGTH) {
+            builder.append(USER_LIST_ID_ALPHABET[rand.nextInt(maxRandom)])
+        }
+        return builder.toString()
     }
 }
 

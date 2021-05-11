@@ -15,6 +15,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TitleListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
@@ -36,7 +38,7 @@ class TitleListAdapter(
         }
     }
 
-    fun submitAppCardList(list: MutableList<AppCardList>) {
+    fun submitAppCardList(list: MutableList<AppCardList>?) {
         adapterScope.launch {
             val items = when (list) {
                 null -> listOf(TitleDataItem.AppCardListItem(AppCardList(id = 1000L)))
@@ -64,12 +66,14 @@ class TitleListAdapter(
                                 submitList(list.filter { it.listId ==item.id }.sortedBy { it.index })
                             }
                         })
-
                     }
                     layoutManager =
                         LinearLayoutManager(context, HORIZONTAL, false)
-
                 }
+                sharedDate.text =
+                    item.sharedDate?.let {
+                        SimpleDateFormat("yyyy-MM-dd", Locale.JAPAN).format(it)
+                    } ?:""
                 lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()
             }

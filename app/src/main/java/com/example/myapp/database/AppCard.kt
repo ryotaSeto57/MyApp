@@ -10,7 +10,7 @@ data class AppCard constructor(
     @ColumnInfo(name = "list_id")
     val listId: Long,
     @ColumnInfo(name = "original_index")
-    val originalIndex: Int,
+    var originalIndex: Int,
     @ColumnInfo(name="index")
     var index: Int,
     @ColumnInfo(name = "package_name")

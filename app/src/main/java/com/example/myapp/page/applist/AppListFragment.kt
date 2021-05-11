@@ -14,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateHandle
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
@@ -34,7 +36,7 @@ import javax.inject.Singleton
 @Singleton
 class AppListFragment : Fragment() {
     private lateinit var binding: FragmentAppListBinding
-    private lateinit var getContent :ActivityResultLauncher<String>
+    private lateinit var getContent: ActivityResultLauncher<String>
 
     private val viewModel: AppListViewModel
             by navGraphViewModels(R.id.app_navigation) { defaultViewModelProviderFactory }
@@ -100,21 +102,27 @@ class AppListFragment : Fragment() {
 
         getContent = registerForActivityResult(MultipleImageContract()){ uriList ->
             uriList?.let {
-                if((viewModel.screenShotItemList.value?.size ?:0)+ uriList.size <= 10) {
+                val totalNumberOfUris = (viewModel.screenShotItemList.value?.size ?:0)+ uriList.size
+                if(totalNumberOfUris <= 10) {
                     viewModel.setImageUri(it)
                 }else{
                     alertMessage()
-                    viewModel.setImageUri(it)
+                    viewModel.setImageUri(it.dropLast(totalNumberOfUris - 10).toMutableList())
                 }
             }
         }
 
-        viewModel.userAppCards.observe(viewLifecycleOwner, Observer {
+        viewModel.userAppCards.observe(viewLifecycleOwner, {
             it?.let {
                 adapter.submitReviewList(it)
             }
         })
 
+        viewModel.isUploadCompleted.observe(viewLifecycleOwner, {
+            if (it == true){
+                shareUrl(viewModel.getUserListUrl())
+            }
+        })
         return binding.root
     }
 
@@ -130,6 +138,16 @@ class AppListFragment : Fragment() {
 
     fun selectImage() {
         getContent.launch("image/*")
+    }
+
+    private fun shareUrl(listUrl: String){
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT,listUrl)
+            type="text/plain"
+        }
+        val shareIntent = Intent.createChooser(sendIntent, null)
+        startActivity(shareIntent)
     }
 
     private val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.Callback() {
@@ -175,8 +193,8 @@ class AppListFragment : Fragment() {
         }
 
         override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            val appCardId = (viewHolder as AppListAdapter.ViewHolder).binding.appCard!!.id
-            viewModel.removeAppDataFromList(appCardId)
+            val appCardOriginalIndex = (viewHolder as AppListAdapter.ViewHolder).binding.appCard!!.originalIndex
+            viewModel.removeAppCardFromList(appCardOriginalIndex)
         }
     })
 }

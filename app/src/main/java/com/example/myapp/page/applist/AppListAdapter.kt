@@ -198,7 +198,7 @@ class AppDataDiffCallback : DiffUtil.ItemCallback<DataItem>() {
 
 sealed class DataItem {
     data class AppCardItem(val appCard: AppCard) : DataItem() {
-        override val id = appCard.id
+        override val id = appCard.originalIndex.toLong()
     }
 
     object AddAppButton : DataItem() {
