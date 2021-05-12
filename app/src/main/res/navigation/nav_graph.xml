@@ -12,6 +12,9 @@
         <action
             android:id="@+id/action_titleFragment_to_appListFragment"
             app:destination="@id/app_navigation" />
+        <action
+            android:id="@+id/action_titleFragment_to_sharedAppListFragment"
+            app:destination="@id/shared_app_navigation"/>
     </fragment>
     <navigation android:id="@+id/app_navigation"
         app:startDestination="@id/appListFragment">
@@ -35,7 +38,6 @@
             <action
                 android:id="@+id/action_appListFragment_to_addAppListFragment"
                 app:destination="@id/addAppListFragment" />
-
         </fragment>
         <fragment
             android:id="@+id/addAppListFragment"
@@ -47,5 +49,15 @@
                 />
         </fragment>
     </navigation>
-
+    <navigation android:id="@+id/shared_app_navigation"
+        app:startDestination="@id/sharedAppListFragment">
+        <argument
+            android:name="listId"
+            app:argType="long"
+            android:defaultValue="0L" />
+        <fragment
+            android:id="@+id/sharedAppListFragment"
+            android:name="com.example.myapp.page.sharedapplist.SharedAppListFragment"
+            android:label="SharedAppListFragment"/>
+    </navigation>
 </navigation>

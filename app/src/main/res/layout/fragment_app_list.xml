@@ -5,9 +5,6 @@
     tools:context=".page.applist.AppListFragment">
 
     <data>
-        <variable
-            name="appListViewModel"
-            type="com.example.myapp.page.applist.AppListViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

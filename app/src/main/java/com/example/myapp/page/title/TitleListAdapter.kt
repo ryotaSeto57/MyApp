@@ -63,7 +63,7 @@ class TitleListAdapter(
                     adapter = TitleAppImageAdapter(titleViewModel, viewLifecycleOwner).apply {
                         titleViewModel.userPastAppCards.observe(viewLifecycleOwner, { nullableList ->
                             nullableList?.let { list ->
-                                submitList(list.filter { it.listId ==item.id }.sortedBy { it.index })
+                                submitList(list.filter { it.listId == item.id }.sortedBy { it.index })
                             }
                         })
                     }

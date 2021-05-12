@@ -23,7 +23,7 @@ class TitleAppImageAdapter(
         when (holder) {
             is ViewHolder -> {
                 val item = getItem(position) as AppCard
-                return holder.bind(item, viewLifecycleOwner)
+                return holder.bind(item, viewLifecycleOwner,titleViewModel)
             }
         }
     }
@@ -36,7 +36,7 @@ class TitleAppImageAdapter(
         private val binding: TitleItemAppImageBinding,
         private val pm: PackageManager
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner) {
+        fun bind(item: AppCard, viewLifecycleOwner: LifecycleOwner,titleViewModel: TitleViewModel) {
             binding.run {
                 appCard = item
                 val appInfo = try {
@@ -49,12 +49,22 @@ class TitleAppImageAdapter(
                 }
                 appImage.apply {
                     setOnClickListener { view: View ->
-                        val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(
-                            item.listId,
-                            createNewList = false,
-                            underEdit = false
-                        )
-                        view.findNavController().navigate(action)
+                        if(titleViewModel.userPastAppCardLists.value!!
+                                .find { it.id == item.listId }?.listUrl ?:"" == "") {
+                            val action =
+                                TitleFragmentDirections.actionTitleFragmentToAppListFragment(
+                                    item.listId,
+                                    createNewList = false,
+                                    underEdit = false
+                                )
+                            view.findNavController().navigate(action)
+                        }else {
+                            val action =
+                                TitleFragmentDirections.actionTitleFragmentToSharedAppListFragment(
+                                    listId = item.listId
+                                )
+                            view.findNavController().navigate(action)
+                        }
                     }
                     setImageDrawable(appInfo?.loadIcon(pm)
                         ?: ResourcesCompat.getDrawable(context.resources, R.mipmap.ic_launcher,null))

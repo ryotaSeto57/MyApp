@@ -49,7 +49,7 @@ class AppListViewModel @Inject constructor(
         savedStateHandle.get<Boolean>(UNDER_EDIT)
 
     init {
-        Timber.i("AppListViewModel created")
+        Timber.i("AppListViewModel is created")
         Timber.i(savedStateHandle.keys().joinToString())
         setUserAppList()
     }
@@ -204,7 +204,8 @@ class AppListViewModel @Inject constructor(
                         savedStateHandle.set(URI_STRING+index, i.uriString)
                     }
                     val appCardList =
-                        appListRepository.getAppCardList(listId) ?: AppCardList(id = 0L,"")
+                        appListRepository.getAppCardList(listId)
+                            ?: AppCardList(id = 0L,"")
                     savedStateHandle.set(
                         SCREEN_SHOT_DESCRIPTION,
                         appCardList.screenShotDescription

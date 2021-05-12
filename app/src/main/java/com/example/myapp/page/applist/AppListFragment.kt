@@ -13,9 +13,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
-import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
@@ -69,7 +66,6 @@ class AppListFragment : Fragment() {
                     }
                 })
             }
-            appListViewModel = viewModel
             itemTouchHelper.attachToRecyclerView(appList)
             speedDial.apply {
                 addActionItem(
