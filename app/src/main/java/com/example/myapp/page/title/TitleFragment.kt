@@ -40,13 +40,6 @@ class TitleFragment : Fragment() {
 
             titleViewModel = viewModel
 
-            createNewListButton.setOnClickListener { view: View ->
-                val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(
-                    createNewList =true,underEdit=false
-                )
-                view.findNavController().navigate(action)
-            }
-
             viewModel.userPastAppCardLists.observe(viewLifecycleOwner,{
                 it?.let {
                     adapter.submitAppCardList(it)

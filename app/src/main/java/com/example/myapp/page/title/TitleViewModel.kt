@@ -24,8 +24,6 @@ class TitleViewModel @Inject constructor(
         emitSource(appAppCardLists)
     }
 
-    val canCreateNewList: LiveData<Boolean> = userPastAppCardLists.map { it.size <4 }
-
     val userPastAppCards:LiveData<MutableList<AppCard>> = liveData {
         val allAppCards = appListRepository.getAllAppCards()
         emitSource(allAppCards)
