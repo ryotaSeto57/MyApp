@@ -38,6 +38,8 @@ class TitleFragment : Fragment() {
 
             titleCardList.adapter = adapter
 
+            titleViewModel = viewModel
+
             createNewListButton.setOnClickListener { view: View ->
                 val action = TitleFragmentDirections.actionTitleFragmentToAppListFragment(
                     createNewList =true,underEdit=false

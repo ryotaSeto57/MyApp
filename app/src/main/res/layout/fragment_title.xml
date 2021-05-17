@@ -7,6 +7,8 @@
         <variable
             name="titleViewModel"
             type="com.example.myapp.page.title.TitleViewModel" />
+
+        <import type="android.view.View"/>
     </data>
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
@@ -26,6 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:clickable="true"
+        android:visibility="@{titleViewModel.canCreateNewList ?View.VISIBLE :View.GONE }"
         android:src="@android:drawable/ic_menu_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
