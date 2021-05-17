@@ -13,6 +13,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
@@ -96,7 +97,7 @@ class AppListFragment : Fragment() {
             }
         }
 
-        getContent = registerForActivityResult(MultipleImageContract()){ uriList ->
+        getContent = registerForActivityResult(MultipleImageContract(activity)){ uriList ->
             uriList?.let {
                 val totalNumberOfUris = (viewModel.screenShotItemList.value?.size ?:0)+ uriList.size
                 if(totalNumberOfUris <= 10) {
@@ -195,29 +196,41 @@ class AppListFragment : Fragment() {
     })
 }
 
-class MultipleImageContract
-    : ActivityResultContract<String, MutableList<Uri?>?>(){
+class MultipleImageContract(private val activity: FragmentActivity?)
+    : ActivityResultContract<String, MutableList<Uri?>?>() {
     override fun createIntent(context: Context, input: String?): Intent {
         return Intent(Intent.ACTION_OPEN_DOCUMENT)
             .addCategory(Intent.CATEGORY_OPENABLE)
-            .putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true)
+            .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             .setType(input)
     }
+
     override fun parseResult(resultCode: Int, intent: Intent?): MutableList<Uri?>? {
         if (intent == null || resultCode != Activity.RESULT_OK) return null
         val fileUris = mutableListOf<Uri?>()
-        if(intent.data != null){
+        if (intent.data != null) {
+            activity?.contentResolver?.takePersistableUriPermission(
+                intent.data!!,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
             fileUris.add(intent.data)
-        }else
-        {
-            val clipData :ClipData = intent.clipData!!
+        } else {
+            val clipData: ClipData = intent.clipData!!
             if (clipData.itemCount <= 10) {
                 for (i in 0 until clipData.itemCount) {
+                    activity?.contentResolver?.takePersistableUriPermission(
+                        clipData.getItemAt(i).uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     fileUris.add(clipData.getItemAt(i).uri)
                 }
-            }else{
-                for (i in 0 until 10){
+            } else {
+                for (i in 0 until 10) {
+                    activity?.contentResolver?.takePersistableUriPermission(
+                        clipData.getItemAt(i).uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     fileUris.add(clipData.getItemAt(i).uri)
                 }
             }
