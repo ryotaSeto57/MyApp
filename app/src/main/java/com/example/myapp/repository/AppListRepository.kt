@@ -238,6 +238,7 @@ class AppListRepository @Inject constructor(
         screenShotDescription: String
     ): Date? {
         return withContext(Dispatchers.IO) {
+            val screenShotUrl: MutableMap<String,String> = mutableMapOf()
             for (i in listOfScreenShotItems) {
                 var bitmap: Bitmap
                 if (Build.VERSION.SDK_INT < 28) {
@@ -250,15 +251,20 @@ class AppListRepository @Inject constructor(
                 val baos = ByteArrayOutputStream()
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos)
                 val data = baos.toByteArray()
-                try {
-                    storageRef.child("screenshots/${userId}/${i.index}").putBytes(data).await()
-                } catch (e: Exception) {
-                    Timber.w("Error in adding ScreenShot of index ${i.index}")
+                val uri = kotlin.runCatching {
+                    try {
+                        storageRef.child("screenshots/${userId}/${i.index}").putBytes(data).await()
+                        storageRef.child("screenshots/${userId}/${i.index}").downloadUrl.await()
+                    } catch (e: Exception) {
+                        Timber.w("Error in adding ScreenShot of index ${i.index}")
+                    }
                 }
+                uri.getOrNull()?.also { screenShotUrl[i.index.toString()]= it.toString() }
             }
             val userInfo: MutableMap<String, Any> =
                 mutableMapOf(
                     "screenshot_description" to screenShotDescription,
+                    "screenshot_url" to screenShotUrl,
                     "user_id" to userId,
                     "time_stamp" to FieldValue.serverTimestamp()
                 )
