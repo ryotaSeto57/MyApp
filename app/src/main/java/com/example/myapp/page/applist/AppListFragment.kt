@@ -140,7 +140,7 @@ class AppListFragment : Fragment() {
     private fun shareUrl(listUrl: String){
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT,listUrl)
+            putExtra(Intent.EXTRA_TEXT, "https://my-app-6154a.web.app/$listUrl")
             type="text/plain"
         }
         val shareIntent = Intent.createChooser(sendIntent, null)
