@@ -133,9 +133,11 @@ class AppListViewModel @Inject constructor(
     val topViewHolderPosition: LiveData<Int>
         get() = _topViewHolderPosition
 
-    private val _isUploadCompleted: MutableLiveData<Boolean> = MutableLiveData(false)
-    val isUploadCompleted:LiveData<Boolean>
-        get() = _isUploadCompleted
+    private val _isUploading: MutableLiveData<Boolean?> = MutableLiveData(null)
+    val isUploading:LiveData<Boolean?>
+        get() = _isUploading
+
+
 
     private var userAppCardListStore: MutableList<AppCard> = mutableListOf()
     private var addUserAppNameListStore: MutableList<String> = mutableListOf()
@@ -413,6 +415,7 @@ class AppListViewModel @Inject constructor(
     fun shareAction() {
         appListScope.launch {
             if (_userAppCards.value!!.lastIndex < MAX_NUMBER_OF_APPS) {
+                _isUploading.postValue(true)
                 userListId = CreateUserListId().createId()
                 saveAppCards()
                 saveScreenShotItem()
@@ -420,7 +423,7 @@ class AppListViewModel @Inject constructor(
                 val uploadDate: Date? = uploadUserScreenShot(userListUrl)
                 saveAppCardList(userListUrl,uploadDate)
                 deleteAppCards()
-                _isUploadCompleted.postValue(true)
+                _isUploading.postValue(false)
             }
         }
     }
@@ -428,7 +431,6 @@ class AppListViewModel @Inject constructor(
     fun setImageUri(uriList: MutableList<Uri?>) {
         appListScope.launch {
 //            TODO("to check if uri is of ScreenShot Image.")
-//            TODO("to add alert if uriList exceeds MAX_NUMBER_OF_SCREENSHOT")
             val imageUriStringList = _imageUriStringList.value?.apply { removeAll(listOf("")) }
             val uriStringList = uriList.map { it.toString() }.toMutableList()
             _imageUriStringList.value =

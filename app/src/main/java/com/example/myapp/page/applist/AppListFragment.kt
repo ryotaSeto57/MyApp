@@ -57,6 +57,7 @@ class AppListFragment : Fragment() {
             false
         ).apply {
             lifecycleOwner = viewLifecycleOwner
+            appListViewModel = viewModel
             appList.adapter = adapter.apply {
                 registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
                     override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
@@ -72,12 +73,12 @@ class AppListFragment : Fragment() {
                 addActionItem(
                     SpeedDialActionItem.Builder(
                         R.id.save_action, R.drawable.ic_baseline_save_18
-                    ).create()
+                    ).setLabel(context.getString(R.string.save_draft)).create()
                 )
                 addActionItem(
                     SpeedDialActionItem.Builder(
                         R.id.share_action, R.drawable.ic_baseline_share_24
-                    ).create()
+                    ).setLabel(context.getString(R.string.share)).create()
                 )
                 setOnActionSelectedListener(SpeedDialView.OnActionSelectedListener { actionItem ->
                     when (actionItem.id) {
@@ -115,8 +116,8 @@ class AppListFragment : Fragment() {
             }
         })
 
-        viewModel.isUploadCompleted.observe(viewLifecycleOwner, {
-            if (it == true){
+        viewModel.isUploading.observe(viewLifecycleOwner, {
+            if (it == false){
                 shareUrl(viewModel.getUserListUrl())
             }
         })
@@ -217,22 +218,12 @@ class MultipleImageContract(private val activity: FragmentActivity?)
             fileUris.add(intent.data)
         } else {
             val clipData: ClipData = intent.clipData!!
-            if (clipData.itemCount <= 10) {
-                for (i in 0 until clipData.itemCount) {
-                    activity?.contentResolver?.takePersistableUriPermission(
-                        clipData.getItemAt(i).uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-                    fileUris.add(clipData.getItemAt(i).uri)
-                }
-            } else {
-                for (i in 0 until 10) {
-                    activity?.contentResolver?.takePersistableUriPermission(
-                        clipData.getItemAt(i).uri,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-                    fileUris.add(clipData.getItemAt(i).uri)
-                }
+            for (i in 0 until clipData.itemCount) {
+                activity?.contentResolver?.takePersistableUriPermission(
+                    clipData.getItemAt(i).uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                fileUris.add(clipData.getItemAt(i).uri)
             }
         }
         return fileUris
