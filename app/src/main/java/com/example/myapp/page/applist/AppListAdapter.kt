@@ -4,8 +4,12 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.findNavController
@@ -21,7 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.lang.Exception
+
 
 private const val ITEM_VIEW_TYPE_SCREEN_SHOT = 0
 private const val ITEM_VIEW_TYPE_ITEM = 1
@@ -109,8 +113,7 @@ class AppListAdapter(
     }
 
     class ScreenShotHolder private constructor(
-        val binding: ListItemScreenShotBinding,
-        private val context: Context
+        val binding: ListItemScreenShotBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
@@ -131,6 +134,20 @@ class AppListAdapter(
                         })
                     }
                 }
+                imageButton.setOnClickListener { view: View ->
+                    viewModel.changeEditability()
+                    val inputMethodManager: InputMethodManager =
+                        view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    if (viewModel.descriptionEditable.value == true) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            screenShotDescription.requestFocus()
+                            inputMethodManager.showSoftInput(screenShotDescription, 0)
+                        }, 50)
+                    }else{
+                        inputMethodManager.hideSoftInputFromWindow(view.windowToken,0)
+                    }
+                }
+
                 executePendingBindings()
             }
         }
@@ -139,7 +156,7 @@ class AppListAdapter(
             fun from(parent: ViewGroup): ScreenShotHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = ListItemScreenShotBinding.inflate(layoutInflater, parent, false)
-                return ScreenShotHolder(binding, parent.context)
+                return ScreenShotHolder(binding)
             }
         }
     }
@@ -168,9 +185,20 @@ class AppListAdapter(
                         )
                     )
                 }
+                imageButton.setOnClickListener { view: View ->
+                    viewModel.changeEditability(item)
+                    val inputMethodManager: InputMethodManager =
+                        view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    if (viewModel.reviewEditableList[item.originalIndex].value == true) {
+                        Handler(Looper.getMainLooper()).postDelayed({
+                        appReviewText.requestFocus()
+                        inputMethodManager.showSoftInput(appReviewText, 0)
+                        }, 50)
+                    }else{
+                        inputMethodManager.hideSoftInputFromWindow(view.windowToken,0)
+                    }
+                }
                 appName.text = appInfo?.loadLabel(pm)?.toString() ?: ERROR_MESSAGE_OF_APP_NAME
-                textAppCardId.text = item.originalIndex.toString()
-                textAppCardIndex.text = item.index.toString()
                 executePendingBindings()
             }
         }
