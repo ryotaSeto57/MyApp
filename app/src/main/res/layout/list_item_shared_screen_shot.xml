@@ -29,7 +29,7 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="#7E7E7E">
+                android:background="@color/screenshot_background">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/shared_screen_shot_view"
