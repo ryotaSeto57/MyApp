@@ -41,8 +41,8 @@
                     android:id="@+id/app_image"
                     android:layout_width="60dp"
                     android:layout_height="60dp"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginTop="4dp"
                     android:contentDescription="@string/app_icon_description"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -50,10 +50,12 @@
 
                 <TextView
                     android:id="@+id/app_name"
-                    android:layout_width="wrap_content"
+                    android:layout_width="220dp"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="24dp"
-                    android:textSize="24sp"
+                    android:layout_marginTop="20dp"
+                    android:textSize="20sp"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
                     app:layout_constraintEnd_toStartOf="@+id/imageButton"
                     app:layout_constraintStart_toEndOf="@+id/app_image"
                     app:layout_constraintTop_toTopOf="parent"
@@ -75,32 +77,13 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/app_image" />
 
-                <TextView
-                    android:id="@+id/textAppCardId"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:layout_constraintEnd_toStartOf="@+id/textAppCardIndex"
-                    app:layout_constraintStart_toEndOf="@+id/app_image"
-                    app:layout_constraintTop_toBottomOf="@+id/app_name" />
-
-                <TextView
-                    android:id="@+id/textAppCardIndex"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    app:layout_constraintEnd_toStartOf="@+id/imageButton"
-                    app:layout_constraintStart_toEndOf="@+id/textAppCardId"
-                    app:layout_constraintTop_toBottomOf="@+id/app_name" />
-
                 <ImageButton
                     android:id="@+id/imageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="10dp"
                     android:background="@drawable/add_button_shape"
-                    android:onClick="@{()-> appListViewModel.changeEditability(appCard)}"
                     android:src="@{appListViewModel.reviewEditableList[appCard.originalIndex]? @drawable/ic_baseline_arrow_drop_up_36 :@drawable/ic_baseline_create_24}"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />

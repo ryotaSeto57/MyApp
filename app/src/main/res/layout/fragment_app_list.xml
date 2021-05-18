@@ -5,6 +5,10 @@
     tools:context=".page.applist.AppListFragment">
 
     <data>
+        <variable
+            name="appListViewModel"
+            type="com.example.myapp.page.applist.AppListViewModel" />
+        <import type="android.view.View"/>
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -35,6 +39,22 @@
             app:sdMainFabClosedSrc="@drawable/ic_baseline_check_24"
             app:sdMainFabOpenedSrc="@drawable/ic_baseline_close_24"
             app:sdOverlayLayout="@id/overlay" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="@{appListViewModel.isUploading()? View.VISIBLE:View.GONE}"
+            android:background="@color/sd_overlay_color"/>
+
+        <ProgressBar
+            android:id="@+id/loading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="@{appListViewModel.isUploading()? View.VISIBLE:View.GONE}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

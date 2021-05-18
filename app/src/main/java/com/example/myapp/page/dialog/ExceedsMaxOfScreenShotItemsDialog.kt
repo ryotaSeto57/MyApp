@@ -4,15 +4,16 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import androidx.fragment.app.DialogFragment
+import com.example.myapp.R
 import java.lang.IllegalStateException
 
 class ExceedsMaxOfScreenShotItemsDialog: DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {
             AlertDialog.Builder(it)
-                .setTitle("You exceeded max of screenshot items.")
-                .setMessage("Maximum of screenshot items is 10.")
-                .setPositiveButton("OK",null)
+                .setTitle(getString(R.string.exceeded_screenshot_title))
+                .setMessage(getString(R.string.exceeded_screenshot_message))
+                .setPositiveButton(getString(R.string.ok),null)
                 .create()
         } ?:throw IllegalStateException("Activity cannot be null")
     }
