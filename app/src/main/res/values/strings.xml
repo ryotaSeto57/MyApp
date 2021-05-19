@@ -10,7 +10,7 @@
     <string name="to_add_app">TOADDAPP</string>
     <string name="save_draft">下書き保存</string>
     <string name="exceeded_screenshot_title">スクリーンショットの枚数</string>
-    <string name="exceeded_screenshot_message">上限は10枚です。</string>
+    <string name="exceeded_screenshot_message">上限は5枚です。</string>
     <string name="ok">OK</string>
     <string name="share">共有</string>
     <string name="web_site">https://my-app-6154a.web.app/</string>

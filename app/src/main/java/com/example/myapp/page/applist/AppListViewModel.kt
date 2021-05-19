@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 
 private const val MAX_NUMBER_OF_APPS = 500
-private const val MAX_NUMBER_OF_SCREENSHOT = 10
+private const val MAX_NUMBER_OF_SCREENSHOT = 5
 
 @HiltViewModel
 class AppListViewModel @Inject constructor(

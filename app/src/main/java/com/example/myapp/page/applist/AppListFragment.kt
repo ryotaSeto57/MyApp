@@ -29,9 +29,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 import javax.inject.Singleton
 
-/**
- * A simple [Fragment] subclass.
- */
+
+private const val MAX_NUMBER_OF_SCREENSHOT = 5
 @AndroidEntryPoint
 @Singleton
 class AppListFragment : Fragment() {
@@ -103,11 +102,11 @@ class AppListFragment : Fragment() {
         getContent = registerForActivityResult(MultipleImageContract(activity)){ uriList ->
             uriList?.let {
                 val totalNumberOfUris = (viewModel.screenShotItemList.value?.size ?:0)+ uriList.size
-                if(totalNumberOfUris <= 10) {
+                if(totalNumberOfUris <= MAX_NUMBER_OF_SCREENSHOT) {
                     viewModel.setImageUri(it)
                 }else{
                     alertMessage()
-                    viewModel.setImageUri(it.dropLast(totalNumberOfUris - 10).toMutableList())
+                    viewModel.setImageUri(it.dropLast(totalNumberOfUris - MAX_NUMBER_OF_SCREENSHOT).toMutableList())
                 }
             }
         }
