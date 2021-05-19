@@ -6,7 +6,7 @@
     app:startDestination="@id/titleFragment">
     <fragment
         android:id="@+id/titleFragment"
-        android:name="com.example.myapp.page.title.TitleFragment"
+        android:name="com.on.smartphone.page.title.TitleFragment"
         android:label="fragment_title"
         tools:layout="@layout/fragment_title">
         <action
@@ -32,7 +32,7 @@
             android:defaultValue="false"/>
         <fragment
             android:id="@+id/appListFragment"
-            android:name="com.example.myapp.page.applist.AppListFragment"
+            android:name="com.on.smartphone.page.applist.AppListFragment"
             android:label="fragment_app_list"
             tools:layout="@layout/fragment_app_list">
             <action
@@ -44,7 +44,7 @@
         </fragment>
         <fragment
             android:id="@+id/addAppListFragment"
-            android:name="com.example.myapp.page.addapplist.AddAppListFragment"
+            android:name="com.on.smartphone.page.addapplist.AddAppListFragment"
             android:label="AddAppListFragment">
             <action
                 android:id="@+id/action_addAppListFragment_to_appListFragment"
@@ -60,7 +60,7 @@
             android:defaultValue="0L" />
         <fragment
             android:id="@+id/sharedAppListFragment"
-            android:name="com.example.myapp.page.sharedapplist.SharedAppListFragment"
+            android:name="com.on.smartphone.page.sharedapplist.SharedAppListFragment"
             android:label="SharedAppListFragment"/>
     </navigation>
 </navigation>

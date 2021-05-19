@@ -6,7 +6,7 @@
     <data>
         <variable
             name="titleViewModel"
-            type="com.example.myapp.page.title.TitleViewModel" />
+            type="com.on.smartphone.page.title.TitleViewModel" />
 
         <import type="android.view.View"/>
     </data>

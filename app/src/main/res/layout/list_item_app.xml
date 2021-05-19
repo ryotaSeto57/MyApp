@@ -6,11 +6,11 @@
     <data>
         <variable
             name="appCard"
-            type="com.example.myapp.database.AppCard" />
+            type="com.on.smartphone.database.AppCard" />
 
         <variable
             name="appListViewModel"
-            type="com.example.myapp.page.applist.AppListViewModel" />
+            type="com.on.smartphone.page.applist.AppListViewModel" />
         
         <import type="android.view.View"/>
     </data>

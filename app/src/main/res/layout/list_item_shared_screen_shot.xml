@@ -6,7 +6,7 @@
     <data>
         <variable
             name="sharedAppListViewModel"
-            type="com.example.myapp.page.sharedapplist.SharedAppListViewModel" />
+            type="com.on.smartphone.page.sharedapplist.SharedAppListViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

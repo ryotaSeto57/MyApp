@@ -5,10 +5,10 @@
     <data>
         <variable
             name="appListViewModel"
-            type="com.example.myapp.page.applist.AppListViewModel" />
+            type="com.on.smartphone.page.applist.AppListViewModel" />
         <variable
             name="addAppName"
-            type="com.example.myapp.database.AddAppName" />
+            type="com.on.smartphone.database.AddAppName" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

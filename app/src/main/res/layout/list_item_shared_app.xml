@@ -6,7 +6,7 @@
     <data>
         <variable
             name="appCard"
-            type="com.example.myapp.database.AppCard" />
+            type="com.on.smartphone.database.AppCard" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout

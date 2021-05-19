@@ -6,7 +6,7 @@
     <data>
         <variable
             name="appListViewModel"
-            type="com.example.myapp.page.applist.AppListViewModel" />
+            type="com.on.smartphone.page.applist.AppListViewModel" />
 
     </data>
 
