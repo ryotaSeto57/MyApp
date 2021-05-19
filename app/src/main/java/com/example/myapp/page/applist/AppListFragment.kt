@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
-import com.example.myapp.page.addapplist.AddAppListFragmentDirections
 import com.example.myapp.page.dialog.ExceedsMaxOfScreenShotItemsDialog
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
@@ -30,7 +29,7 @@ import timber.log.Timber
 import javax.inject.Singleton
 
 
-private const val MAX_NUMBER_OF_SCREENSHOT = 5
+private const val MAX_NUMBER_OF_SCREENSHOT = 10
 @AndroidEntryPoint
 @Singleton
 class AppListFragment : Fragment() {

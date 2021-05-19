@@ -1,5 +1,6 @@
 package com.example.myapp.page.title
 
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
 import com.example.myapp.database.AppCardList
 import com.example.myapp.databinding.TitleItemCardBinding
 import com.example.myapp.databinding.TitleItemCreateButtonBinding
+import com.example.myapp.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -117,10 +119,18 @@ class TitleListAdapter(
                     layoutManager =
                         LinearLayoutManager(context, HORIZONTAL, false)
                 }
-                sharedDate.text =
-                    item.sharedDate?.let {
-                        SimpleDateFormat("yyyy-MM-dd", Locale.JAPAN).format(it)
-                    } ?:""
+                item.sharedDate?.let {
+                    sharedDate.text = SimpleDateFormat("yyyy-MM-dd", Locale.JAPAN).format(it)
+                    check.visibility = View.VISIBLE
+                    titleListContainer.apply {
+                        if(Build.VERSION.SDK_INT < 23){
+                            @Suppress("DEPRECATION")
+                            setBackgroundColor(this.resources.getColor(R.color.colorAccent))
+                        }else {
+                            setBackgroundColor(this.context.getColor(R.color.colorAccent))
+                        }
+                    }
+                }
                 lifecycleOwner = viewLifecycleOwner
                 executePendingBindings()
             }

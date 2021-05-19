@@ -13,8 +13,8 @@ import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 
-private const val MAX_NUMBER_OF_APPS = 500
-private const val MAX_NUMBER_OF_SCREENSHOT = 5
+private const val MAX_NUMBER_OF_APPS = 300
+private const val MAX_NUMBER_OF_SCREENSHOT = 10
 
 @HiltViewModel
 class AppListViewModel @Inject constructor(
@@ -236,7 +236,6 @@ class AppListViewModel @Inject constructor(
     private suspend fun createAddAppCards(packageNameList: MutableList<String>) {
         withContext(Dispatchers.IO) {
             val listId = _userAppCards.value!!.last().listId
-            //TODO("alert if number Of Apps exceeds MAX NUMBER OF APPS")
             val listAddAppCards: MutableList<AppCard> = MutableList(packageNameList.size) { index ->
                 AppCard(
                     id = 0,
@@ -430,7 +429,6 @@ class AppListViewModel @Inject constructor(
 
     fun setImageUri(uriList: MutableList<Uri?>) {
         appListScope.launch {
-//            TODO("to check if uri is of ScreenShot Image.")
             val imageUriStringList = _imageUriStringList.value?.apply { removeAll(listOf("")) }
             val uriStringList = uriList.map { it.toString() }.toMutableList()
             _imageUriStringList.value =
