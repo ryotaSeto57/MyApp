@@ -49,7 +49,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="4dp"
                     android:background="@drawable/add_button_shape"
-                    android:onClick="@{()-> appListViewModel.changeEditability()}"
                     android:src="@{appListViewModel.descriptionEditable? @drawable/ic_baseline_arrow_drop_up_36 :@drawable/ic_baseline_create_24}"
                     app:layout_constraintBottom_toBottomOf="@+id/screen_shot_view"
                     app:layout_constraintEnd_toEndOf="parent"

@@ -38,6 +38,9 @@
             <action
                 android:id="@+id/action_appListFragment_to_addAppListFragment"
                 app:destination="@id/addAppListFragment" />
+            <action
+                android:id="@+id/action_appListFragment_to_titleFragment"
+                app:destination="@id/titleFragment"/>
         </fragment>
         <fragment
             android:id="@+id/addAppListFragment"

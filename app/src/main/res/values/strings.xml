@@ -13,4 +13,5 @@
     <string name="exceeded_screenshot_message">上限は10枚です。</string>
     <string name="ok">OK</string>
     <string name="share">共有</string>
+    <string name="web_site">https://my-app-6154a.web.app/</string>
 </resources>

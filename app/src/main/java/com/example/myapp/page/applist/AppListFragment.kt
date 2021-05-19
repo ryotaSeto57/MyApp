@@ -14,12 +14,14 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import androidx.navigation.findNavController
 import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapp.R
 import com.example.myapp.databinding.FragmentAppListBinding
+import com.example.myapp.page.addapplist.AddAppListFragmentDirections
 import com.example.myapp.page.dialog.ExceedsMaxOfScreenShotItemsDialog
 import com.leinardi.android.speeddial.SpeedDialActionItem
 import com.leinardi.android.speeddial.SpeedDialView
@@ -119,6 +121,9 @@ class AppListFragment : Fragment() {
         viewModel.isUploading.observe(viewLifecycleOwner, {
             if (it == false){
                 shareUrl(viewModel.getUserListUrl())
+                val action =
+                    AppListFragmentDirections.actionAppListFragmentToTitleFragment()
+                view?.findNavController()?.navigate(action)
             }
         })
         return binding.root
@@ -141,7 +146,7 @@ class AppListFragment : Fragment() {
     private fun shareUrl(listUrl: String){
         val sendIntent = Intent().apply {
             action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "https://my-app-6154a.web.app/$listUrl")
+            putExtra(Intent.EXTRA_TEXT, getString(R.string.web_site)+listUrl)
             type="text/plain"
         }
         val shareIntent = Intent.createChooser(sendIntent, null)

@@ -1,9 +1,11 @@
 package com.example.myapp.page.sharedapplist
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.navigation.navGraphViewModels
@@ -36,6 +38,11 @@ class SharedAppListFragment : Fragment() {
                         submitSharedAppList(it)
                     }
                 })
+            }
+            goToWebButton.setOnClickListener { view:View ->
+                val url = viewModel.listUrl.value
+                val intent = Intent(Intent.ACTION_VIEW,(getString(R.string.web_site)+url).toUri() )
+                startActivity(intent)
             }
         }
 

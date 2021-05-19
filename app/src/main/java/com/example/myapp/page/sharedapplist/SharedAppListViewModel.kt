@@ -32,6 +32,10 @@ class SharedAppListViewModel @Inject constructor(
     val screenShotDescription: LiveData<String>
         get() = _screenShotDescription
 
+    private val _listUrl = MutableLiveData<String>()
+    val listUrl: LiveData<String>
+        get() = _listUrl
+
     private var listId =
         savedStateHandle.get<Long>(AppListViewModel.LIST_ID)
 
@@ -41,6 +45,7 @@ class SharedAppListViewModel @Inject constructor(
             val appCards: MutableList<AppCard> = getAppCardsFromDatabase(listId)
             _userAppCards.value = appCards
             val appCardList = appListRepository.getAppCardList(listId)
+            _listUrl.value = appCardList?.listUrl
             _screenShotDescription.value = appCardList?.screenShotDescription
             val screenShotItems = getScreenShotItems(listId).sortedBy { it.index }.toMutableList()
             _screenShotItemList.value = screenShotItems
