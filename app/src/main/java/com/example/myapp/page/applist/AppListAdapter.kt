@@ -26,7 +26,7 @@ import java.lang.Exception
 private const val ITEM_VIEW_TYPE_SCREEN_SHOT = 0
 private const val ITEM_VIEW_TYPE_ITEM = 1
 private const val ITEM_VIEW_TYPE_BUTTON = 2
-private const val ERROR_MESSAGE_OF_APP_NAME = "削除されました"
+private const val ERROR_MESSAGE_OF_APP_NAME = "削除されましたよ"
 
 class AppListAdapter(
     private val viewLifecycleOwner: LifecycleOwner,
